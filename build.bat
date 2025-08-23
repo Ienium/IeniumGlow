@@ -62,9 +62,9 @@ echo %GREEN%CMake configuration completed successfully!%NC%
 echo.
 
 echo %YELLOW%Step 3: Building project...%NC%
-echo Running: cmake --build %BUILD_DIR% --config Release
+echo Running: cmake --build %BUILD_DIR% --config Debug
 echo.
-cmake --build "%BUILD_DIR%" --config Release
+cmake --build "%BUILD_DIR%" --config Debug
 if errorlevel 1 (
     echo %RED%Error: Build failed%NC%
     exit /b 1

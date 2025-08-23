@@ -1,0 +1,3 @@
+[submodule "External/IeniumUtils"]
+	path = External/IeniumUtils
+	url = https://github.com/Ienium/IeniumUtils.git

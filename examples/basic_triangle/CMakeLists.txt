@@ -3,6 +3,8 @@ add_executable(basic_triangle main.cpp)
 target_link_libraries(basic_triangle
     PRIVATE
         Ienium::Glow
+        GLEW::GLEW
+        glfw
 )
 
 set_target_properties(basic_triangle PROPERTIES

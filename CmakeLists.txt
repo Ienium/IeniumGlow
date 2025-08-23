@@ -1,3 +1,19 @@
+# Add this after your project() declaration
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+# Ensure debug symbols are generated
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(MSVC)
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /Od")
+        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG")
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
+    else()
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+    endif()
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #set(CMAKE_TOOLCHAIN_FILE "F:/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
@@ -17,6 +33,7 @@ option(IENIUM_GLOW_BUILD_EXAMPLES "Build examples" ON)
 option(IENIUM_GLOW_BUILD_TEST "Build tests" OFF)
 
 find_package(GLEW REQUIRED)
+find_package(glfw3 REQUIRED)
 add_subdirectory(src)
 
 if(IENIUM_GLOW_BUILD_EXAMPLES)
