@@ -1,5 +1,6 @@
 set(SOURCES
     renderer2d.cpp
+    core/Vector.cpp
 )
 
 add_library(ienium_glow STATIC ${SOURCES})
