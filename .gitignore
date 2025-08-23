@@ -31,3 +31,6 @@ Thumbs.db
 .vscode/
 .clangd
 .cache/
+
+# Other directories
+/internal
