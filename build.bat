@@ -161,7 +161,7 @@ echo.
 if %RUN_AFTER%==true (
     echo.
     echo %YELLOW%Looking for executable in %BUILD_DIR%\examples\basic_triangle...%NC%
-    for %%f in ("%BUILD_DIR%\tests\vector_test\*.exe") do (
+    for %%f in ("%BUILD_DIR%\examples\basic_triangle\*.exe") do (
         echo Running: %%f
         "%%f"
         goto :eof

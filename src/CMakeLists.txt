@@ -1,5 +1,6 @@
 set(SOURCES
     renderer2d.cpp
+    shader.cpp
     core/Vector.cpp
 )
 
