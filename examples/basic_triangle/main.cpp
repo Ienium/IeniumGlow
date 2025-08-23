@@ -1,5 +1,7 @@
+#include "ienium/glow/glow.hpp"
 #include "ienium/utils/color/ieniumcolor.hpp"
 #include <cstddef>
+#include <filesystem>
 #include <print>
 #include <string>
 
@@ -62,10 +64,14 @@ int main ()
     }
     logger->Log(IENIUM_INFO, "Glow | Initialized.");
 
+    auto program_id = LoadShaders("examples\\basic_triangle\\resources\\vertexshader.glsl", "examples\\basic_triangle\\resources\\fragmentshader.glsl");
+
     logger->Log(IENIUM_INFO, "GLFW3 | Starting window loop.");    
     while (!glfwWindowShouldClose (window) && !glfwGetKey(window, GLFW_KEY_ESCAPE ))
     {
+        glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer.Clear (Color::Red ());
+        glUseProgram (program_id);
         renderer.DrawTriangle ();
 
         glfwSwapBuffers (window);
