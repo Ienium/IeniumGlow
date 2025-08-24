@@ -18,12 +18,16 @@ namespace ienium
 
         private:
         GLid spriteVBOId;
-
         GLid spriteVAOId;
+        GLid spriteEBOId;
+        unsigned int spriteQuadCount;
+
         GLid lineVAOId;
+        GLid lineVBOId;
+        GLid lineEBOId;
         //... More VAOs as needed (one pre object type (sprite, line, triangles)
 
-        GLid CreateBuffer ();
+        void CreateBuffers (GLid& vbo, GLid& ebo) const;
         
     };
 }

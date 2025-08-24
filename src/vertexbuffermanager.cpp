@@ -19,9 +19,10 @@ namespace ienium
         glGenVertexArrays (1, &spriteVAOId);
         glBindVertexArray (spriteVAOId);
 
-        spriteVBOId = CreateBuffer ();
+        CreateBuffers (spriteVBOId, spriteEBOId);
 
         glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
 
         // data order : [x,y,u,v]->[x,y,u,v]
         glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);                          // X,Y => stride = 4, offset = 0
@@ -34,14 +35,16 @@ namespace ienium
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    GLid VertexBufferManager::CreateBuffer ()
+    void VertexBufferManager::CreateBuffers (GLid& vbo_id, GLid& ebo_id) const
     {
-        GLid new_vert_buffer_id;
-        glGenBuffers (1, &new_vert_buffer_id);                              // 1 as we only want to crate a single vertex buffer at a time
-        glBindBuffer (GL_ARRAY_BUFFER, new_vert_buffer_id);
+        glGenBuffers (1, &vbo_id);                              // 1 as we only want to crate a single vertex buffer at a time
+        glGenBuffers (1, &ebo_id);
+
+        glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, ebo_id);
         
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        return new_vert_buffer_id;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     void VertexBufferManager::FillSpriteBuffer (const std::vector<Vector2>& vertices, const std::vector<Vector2>& uvs)
@@ -64,13 +67,29 @@ namespace ienium
 
         } 
 
+        spriteQuadCount = vertices.size () / (VERTEX_SIZE * 2); // 4 verts per quad
+        unsigned int* ebo = new unsigned int[spriteQuadCount * 6];
+
+        for (unsigned int i = 0; i < spriteQuadCount; i++)
+        {
+            ebo[i * 6 + 0] = i * 6;
+            ebo[i * 6 + 1] = i * 6 + 1;
+            ebo[i * 6 + 2] = i * 6 + 2;
+            ebo[i * 6 + 3] = i * 6;
+            ebo[i * 6 + 4] = i * 6 + 2;
+            ebo[i * 6 + 5] = i * 6 + 3;
+        }
+
         glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
-        glBufferData (GL_ARRAY_BUFFER, buffer.size () * sizeof(float), buffer.data(), GL_STATIC_DRAW);
+        glBufferData (GL_ARRAY_BUFFER, buffer.size () * sizeof(float), buffer.data(), GL_DYNAMIC_DRAW);
+
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
+        glBufferData (GL_ELEMENT_ARRAY_BUFFER, spriteQuadCount * 6 * sizeof(unsigned int), ebo, GL_DYNAMIC_DRAW);
     }
 
     void VertexBufferManager::DrawSpriteBuffer ()
     {
         glBindVertexArray (spriteVAOId);
-        glDrawArrays (GL_TRIANGLES, 0, 3);
+        glDrawElements (GL_TRIANGLES, spriteQuadCount * 6,GL_UNSIGNED_INT, 0);
     }
 }
