@@ -1,16 +1,13 @@
-#include "ienium/glow/glow.hpp"
-#include "ienium/utils/color/ieniumcolor.hpp"
 #include <cstddef>
 #include <filesystem>
-#include <print>
 #include <string>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
 #include "GL/glew.h"
 
-
+#include "ienium/glow/glow.hpp"
+#include "ienium/glow/vertexbuffermanager.hpp"
 #include "ienium/glow/renderer2d.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
 
@@ -67,12 +64,27 @@ int main ()
     auto program_id = LoadShaders("examples\\basic_triangle\\resources\\vertexshader.glsl", "examples\\basic_triangle\\resources\\fragmentshader.glsl");
 
     logger->Log(IENIUM_INFO, "GLFW3 | Starting window loop.");    
+
+    VertexBufferManager manager;
+    std::vector<Vector2> vertices = {
+        Vector2(-0.5,-0.5),
+        Vector2(0,-0.5),
+        Vector2(0,0),
+        Vector2(-0.5,0),
+        Vector2(0,0),
+        Vector2(0.5,0),
+        Vector2(0.5,0.5),
+        Vector2(0,0.5)
+    };
+    manager.Initialize();
+    manager.FillSpriteBuffer(vertices, vertices);
+
     while (!glfwWindowShouldClose (window) && !glfwGetKey(window, GLFW_KEY_ESCAPE ))
     {
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderer.Clear (Color::Red ());
+        //renderer.Clear (Color::Red ());
         glUseProgram (program_id);
-        renderer.DrawTriangle ();
+        manager.DrawSpriteBuffer();
 
         glfwSwapBuffers (window);
         glfwPollEvents ();

@@ -1,6 +1,7 @@
 set(SOURCES
     renderer2d.cpp
     shader.cpp
+    vertexbuffermanager.cpp
     core/Vector.cpp
 )
 
