@@ -4,6 +4,12 @@
 
 #include <vector>
 
+#define MAX_VERTICES (size_t) MAX_QUADS * 4
+
+const size_t MAX_QUADS      = 16384;        // per Batch
+const size_t MAX_VERTiCES   = 4 * 16384;    // per Batch
+const size_t MAX_INDICES    = 6 * 16384;    // per Batch
+
 namespace ienium
 {
     typedef unsigned int GLid;

@@ -23,7 +23,7 @@ namespace ienium
 
         // data order : [x,y,u,v]->[x,y,u,v]
         glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);                          // X,Y => stride = 4, offset = 0
-        glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof (float)));      // U,V => stride = 4, offset = 2
+        glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof (float)));       // U,V => stride = 4, offset = 2
         glEnableVertexAttribArray (0);
         glEnableVertexAttribArray (1);
 
@@ -39,6 +39,14 @@ namespace ienium
 
         glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, ebo_id);
+
+        glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
+        glBufferData (GL_ARRAY_BUFFER, MAX_VERTiCES * 4 *  sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
+        glBufferData (GL_ELEMENT_ARRAY_BUFFER, MAX_INDICES * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
+
+        
         
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -50,7 +58,7 @@ namespace ienium
         
         if (vertices.size () != uvs.size ())
         {
-            logger->Log(utils::IENIUM_WARNING, "Vertex vector and uv vector have different sized. Using vertex vector as base. Filling up usvs with border points if needed");
+            logger->Log(utils::IENIUM_WARNING, "Vertex vector and uv vector have different sized. Using vertex vector as base. Filling up uvs with border points if needed");
             // set uvs to size of vertices and fill up with border points
         }
 
@@ -78,10 +86,10 @@ namespace ienium
         }
 
         glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
-        glBufferData (GL_ARRAY_BUFFER, buffer.size () * sizeof(float), buffer.data(), GL_DYNAMIC_DRAW);
+        glBufferSubData (GL_ARRAY_BUFFER, 0, buffer.size () * sizeof(float), buffer.data());
 
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
-        glBufferData (GL_ELEMENT_ARRAY_BUFFER, spriteQuadCount * 6 * sizeof(unsigned int), ebo, GL_DYNAMIC_DRAW);
+        glBufferSubData (GL_ELEMENT_ARRAY_BUFFER, 0, spriteQuadCount * 6 * sizeof(unsigned int), ebo);
 
         delete[] ebo;
     }
