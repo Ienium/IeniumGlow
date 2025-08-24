@@ -72,15 +72,14 @@ int main ()
     VertexBufferManager manager;
     std::vector<Vector2> vertices = {Vector2(-1,-1), Vector2(1,-1), Vector2(0,1)};
     manager.Initialize();
-    auto id = manager.CreateBuffer(3);
-    manager.FillBuffer(id, vertices);
+    manager.FillSpriteBuffer(vertices, vertices);
 
     while (!glfwWindowShouldClose (window) && !glfwGetKey(window, GLFW_KEY_ESCAPE ))
     {
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //renderer.Clear (Color::Red ());
-        //glUseProgram (program_id);
-        manager.DrawBuffer(id);
+        glUseProgram (program_id);
+        manager.DrawSpriteBuffer();
 
         glfwSwapBuffers (window);
         glfwPollEvents ();

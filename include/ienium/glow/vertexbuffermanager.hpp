@@ -2,28 +2,29 @@
 
 #include "ienium/glow/core/Vector.hpp"
 
-#include <cstddef>
-#include <map>
-#include <memory>
 #include <vector>
 
 namespace ienium
 {
-    typedef unsigned int VertexArrayId;
-    typedef unsigned int VertBufferId ;
-
+    typedef unsigned int GLid;
     class VertexBufferManager
     {
         public:
         void Initialize ();
 
-        VertBufferId CreateBuffer (std::size_t initial_size);
-        void FillBuffer (VertBufferId handle, std::vector<Vector2> vertices);
-        void DrawBuffer (VertBufferId handle);
+        
+        void FillSpriteBuffer (const std::vector<Vector2>& vertices, const std::vector<Vector2>& uvs);
+        void DrawSpriteBuffer ();
 
         private:
-        VertexArrayId vertexArrayId;
-        std::map<VertBufferId, std::vector<float>*> vertexBuffers;
+        GLid spriteVBOId;
+
+        GLid spriteVAOId;
+        GLid lineVAOId;
+        //... More VAOs as needed (one pre object type (sprite, line, triangles)
+
+        GLid CreateBuffer ();
+        
     };
 }
 
