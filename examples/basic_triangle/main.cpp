@@ -1,17 +1,13 @@
-#include "ienium/glow/glow.hpp"
-#include "ienium/glow/vertexbuffermanager.hpp"
-#include "ienium/utils/color/ieniumcolor.hpp"
 #include <cstddef>
 #include <filesystem>
-#include <print>
 #include <string>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
 #include "GL/glew.h"
 
-
+#include "ienium/glow/glow.hpp"
+#include "ienium/glow/vertexbuffermanager.hpp"
 #include "ienium/glow/renderer2d.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
 
@@ -70,7 +66,16 @@ int main ()
     logger->Log(IENIUM_INFO, "GLFW3 | Starting window loop.");    
 
     VertexBufferManager manager;
-    std::vector<Vector2> vertices = {Vector2(-0.5,-0.5), Vector2(0.5,-0.5), Vector2(0.5,0.5), Vector2(-0.5,0.5)};
+    std::vector<Vector2> vertices = {
+        Vector2(-0.5,-0.5),
+        Vector2(0,-0.5),
+        Vector2(0,0),
+        Vector2(-0.5,0),
+        Vector2(0,0),
+        Vector2(0.5,0),
+        Vector2(0.5,0.5),
+        Vector2(0,0.5)
+    };
     manager.Initialize();
     manager.FillSpriteBuffer(vertices, vertices);
 

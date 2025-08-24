@@ -1,10 +1,7 @@
-#include <GL/glew.h>
-#include <cstddef>
-#include <memory>
-#include <print>
 #include <string>
-#include <type_traits>
 #include <vector>
+
+#include <GL/glew.h>
 
 #include "ienium/glow/vertexbuffermanager.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
@@ -67,17 +64,17 @@ namespace ienium
 
         } 
 
-        spriteQuadCount = vertices.size () / (VERTEX_SIZE * 2); // 4 verts per quad
+        spriteQuadCount = vertices.size () / 4; // 4 verts per quad
         unsigned int* ebo = new unsigned int[spriteQuadCount * 6];
 
         for (unsigned int i = 0; i < spriteQuadCount; i++)
         {
-            ebo[i * 6 + 0] = i * 6;
-            ebo[i * 6 + 1] = i * 6 + 1;
-            ebo[i * 6 + 2] = i * 6 + 2;
-            ebo[i * 6 + 3] = i * 6;
-            ebo[i * 6 + 4] = i * 6 + 2;
-            ebo[i * 6 + 5] = i * 6 + 3;
+            ebo[i * 6 + 0] = i * 4;
+            ebo[i * 6 + 1] = i * 4 + 1;
+            ebo[i * 6 + 2] = i * 4 + 2;
+            ebo[i * 6 + 3] = i * 4;
+            ebo[i * 6 + 4] = i * 4 + 2;
+            ebo[i * 6 + 5] = i * 4 + 3;
         }
 
         glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
@@ -85,6 +82,8 @@ namespace ienium
 
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
         glBufferData (GL_ELEMENT_ARRAY_BUFFER, spriteQuadCount * 6 * sizeof(unsigned int), ebo, GL_DYNAMIC_DRAW);
+
+        delete[] ebo;
     }
 
     void VertexBufferManager::DrawSpriteBuffer ()
