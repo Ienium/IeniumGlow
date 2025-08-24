@@ -8,7 +8,7 @@
 
 #include "ienium/glow/glow.hpp"
 #include "ienium/glow/vertexbuffermanager.hpp"
-#include "ienium/glow/renderer2d.hpp"
+//#include "ienium/glow/renderer2d.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
 
 using namespace ienium;

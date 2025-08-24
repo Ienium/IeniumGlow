@@ -10,7 +10,9 @@ namespace ienium
     class Vector2
     {
         public:
-        Vector2 (double _x = 0.0, double _y = 0.0) : x(_x), y(_y) {}
+        Vector2 () : x(0), y(0) {}
+        Vector2 (double _x, double _y) : x(_x), y(_y) {}
+        Vector2 (double equal_length) : x(equal_length), y(equal_length) {}
 
 
         inline double X () const { return x; }
@@ -50,6 +52,16 @@ namespace ienium
         // String output
         inline std::string ToString () const;
         friend std::ostream& operator<< (std::ostream& os, const Vector2& v);
+
+
+        // Standard Vectors
+        static Vector2 Zero ()  { return Vector2 (0,0); }
+        static Vector2 One ()   { return Vector2 (1,1); }
+
+        static Vector2 Up ()    { return Vector2 (0,1); }
+        static Vector2 Down ()  { return Vector2 (0,-1); }
+        static Vector2 Right () { return Vector2 (1,0); }
+        static Vector2 Left()   { return Vector2 (-1,0); }
 
 
         private:

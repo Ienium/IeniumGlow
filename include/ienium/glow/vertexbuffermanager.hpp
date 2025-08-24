@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ienium/glow/core/Vector.hpp"
+#include "ienium/glow/renderer2d.hpp"
 
 #include <vector>
 
@@ -12,7 +13,6 @@ const size_t MAX_INDICES    = 6 * 16384;    // per Batch
 
 namespace ienium
 {
-    typedef unsigned int GLid;
     class VertexBufferManager
     {
         public:
@@ -23,17 +23,17 @@ namespace ienium
         void DrawSpriteBuffer ();
 
         private:
-        GLid spriteVBOId;
-        GLid spriteVAOId;
-        GLid spriteEBOId;
+        ResourceId spriteVBOId;
+        ResourceId spriteVAOId;
+        ResourceId spriteEBOId;
         unsigned int spriteQuadCount;
 
-        GLid lineVAOId;
-        GLid lineVBOId;
-        GLid lineEBOId;
+        ResourceId lineVAOId;
+        ResourceId lineVBOId;
+        ResourceId lineEBOId;
         //... More VAOs as needed (one pre object type (sprite, line, triangles)
 
-        void CreateBuffers (GLid& vbo, GLid& ebo) const;
+        void CreateBuffers (ResourceId& vbo, ResourceId& ebo) const;
         
     };
 }

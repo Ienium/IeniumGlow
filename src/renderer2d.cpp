@@ -82,8 +82,4 @@ namespace ienium::glow
 
     }
 
-    void Renderer2D::DrawTriangle ()
-    {
-        impl->DrawTriangle ();
-    }
 }
