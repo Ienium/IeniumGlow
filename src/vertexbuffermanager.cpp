@@ -46,8 +46,6 @@ namespace ienium
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
         glBufferData (GL_ELEMENT_ARRAY_BUFFER, MAX_INDICES * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
 
-        
-        
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
