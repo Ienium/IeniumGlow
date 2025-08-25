@@ -20,7 +20,7 @@ namespace ienium
 
         
         void FillSpriteBuffer (const std::vector<Vector2>& vertices, const std::vector<Vector2>& uvs);
-        void DrawSpriteBuffer ();
+        void DrawSpriteBuffer () const;
 
         private:
         ResourceId spriteVBOId;
@@ -33,7 +33,7 @@ namespace ienium
         ResourceId lineEBOId;
         //... More VAOs as needed (one pre object type (sprite, line, triangles)
 
-        void CreateBuffers (ResourceId& vbo, ResourceId& ebo) const;
+        void CreateBuffers (ResourceId& vbo, ResourceId& ebo);
         
     };
 }
