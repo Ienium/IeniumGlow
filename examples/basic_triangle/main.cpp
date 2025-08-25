@@ -1,3 +1,4 @@
+#include "ienium/glow/core/Vector.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <string>
@@ -8,7 +9,7 @@
 
 #include "ienium/glow/glow.hpp"
 #include "ienium/glow/vertexbuffermanager.hpp"
-#include "ienium/glow/renderer2d.hpp"
+//#include "ienium/glow/renderer2d.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
 
 using namespace ienium;
@@ -65,26 +66,16 @@ int main ()
 
     logger->Log(IENIUM_INFO, "GLFW3 | Starting window loop.");    
 
-    VertexBufferManager manager;
-    std::vector<Vector2> vertices = {
-        Vector2(-0.5,-0.5),
-        Vector2(0,-0.5),
-        Vector2(0,0),
-        Vector2(-0.5,0),
-        Vector2(0,0),
-        Vector2(0.5,0),
-        Vector2(0.5,0.5),
-        Vector2(0,0.5)
-    };
-    manager.Initialize();
-    manager.FillSpriteBuffer(vertices, vertices);
 
     while (!glfwWindowShouldClose (window) && !glfwGetKey(window, GLFW_KEY_ESCAPE ))
     {
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //renderer.Clear (Color::Red ());
         glUseProgram (program_id);
-        manager.DrawSpriteBuffer();
+        
+        renderer.DrawSprite(Vector2(-0.5,-0.5), 0);
+        renderer.DrawSprite(Vector2(0.5,0.5), 0);
+
 
         glfwSwapBuffers (window);
         glfwPollEvents ();

@@ -32,7 +32,7 @@ namespace ienium
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    void VertexBufferManager::CreateBuffers (GLid& vbo_id, GLid& ebo_id) const
+    void VertexBufferManager::CreateBuffers (ResourceId& vbo_id, ResourceId& ebo_id)
     {
         glGenBuffers (1, &vbo_id);                              // 1 as we only want to crate a single vertex buffer at a time
         glGenBuffers (1, &ebo_id);
@@ -94,7 +94,7 @@ namespace ienium
         delete[] ebo;
     }
 
-    void VertexBufferManager::DrawSpriteBuffer ()
+    void VertexBufferManager::DrawSpriteBuffer () const
     {
         glBindVertexArray (spriteVAOId);
         glDrawElements (GL_TRIANGLES, spriteQuadCount * 6,GL_UNSIGNED_INT, 0);
