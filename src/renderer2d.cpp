@@ -1,12 +1,9 @@
 # include "ienium/glow/renderer2d.hpp"
 #include "ienium/glow/vertexbuffermanager.hpp"
-#include "ienium/utils/logger/ieniumlogger.hpp"
+#include "ienium/glow/core/internaldefinitions.hpp"
 
 #include <GL/glew.h>
 #include <memory>
-
-#define NOT_YET_IMPLEMENTED ienium::utils::LoggerManager::GetInstance ().GetLogger ()->Log (utils::IENIUM_ERROR, std::string("Error executing ") + __PRETTY_FUNCTION__ + std::string (". This Method is not yet implemented."))
-#define LOGGER ienium::utils::LoggerManager::GetInstance ().GetLogger ()
 
 using namespace ienium::utils;
 

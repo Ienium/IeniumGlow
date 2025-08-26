@@ -8,34 +8,36 @@ namespace ienium::glow
     {
         public:
         void SetShader (ResourceId shader_id);
-        void SetTexture (ResourceId texture);
+        void SetTexture (ResourceId texture_id);
 
         void SetBlendMode (BlendFactor src, BlendFactor dst);
-        void SetBlendState (bool enabled);
+        void DisableBlend ();
         void SetDepthTestState (bool enabled);
+
+        void SetBuffers (ResourceId vao_id, ResourceId vbo_id, ResourceId ebo_id);
 
         void SetViewport (int x, int y, int width, int height);
 
+        void Reset ();
+
         private:
-        ResourceId currentShader;
+        ResourceId currentShaderId = INVALID_RESOURCE;
 
-        ResourceId currentTexture;
-        int currentTextureSlot;                     // Unused
+        ResourceId currentTextureId = INVALID_RESOURCE;
+        int currentTextureSlot;                             // Unused
 
-        BlendFactor currentSrcFactor;
-        BlendFactor currentDstFactor;
+        BlendFactor currentSrcFactor = BLEND_ONE;
+        BlendFactor currentDstFactor = BLEND_ONE;
 
-        ResourceId currentVAO;
-        ResourceId currentVBO;
-        ResourceId currentEBO;
+        ResourceId currentVAOId = INVALID_RESOURCE;
+        ResourceId currentVBOId = INVALID_RESOURCE;
+        ResourceId currentEBOId = INVALID_RESOURCE;
 
-        bool depthTestEnabled;
-        bool blendEnabled;
-        BlendFactor blendSrc;
-        BlendFactor blendDst;
+        bool depthTestEnabled = false;
+        bool blendEnabled = false;
 
-        int viewportX = 0, viewportY = 0;
-        int viewportWidth = 0, viewportHeight = 0;
+        int currentViewportX = 0, currentViewportY = 0;
+        int currentViewportWidth = 0, currentViewportHeight = 0;
 
     };
 }

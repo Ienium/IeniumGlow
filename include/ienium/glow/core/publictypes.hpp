@@ -3,6 +3,7 @@
 namespace ienium
 {
     typedef unsigned int ResourceId;
+    const ResourceId INVALID_RESOURCE = -1;
 
     enum BlendFactor {
         BLEND_ZERO  = 0,                            // GL_ZERO
