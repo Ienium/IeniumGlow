@@ -1,12 +1,10 @@
 # include "ienium/glow/renderer2d.hpp"
+#include "ienium/glow/memorymanager.hpp"
 #include "ienium/glow/vertexbuffermanager.hpp"
-#include "ienium/utils/logger/ieniumlogger.hpp"
+#include "ienium/glow/core/internaldefinitions.hpp"
 
 #include <GL/glew.h>
 #include <memory>
-
-#define NOT_YET_IMPLEMENTED ienium::utils::LoggerManager::GetInstance ().GetLogger ()->Log (utils::IENIUM_ERROR, std::string("Error executing ") + __PRETTY_FUNCTION__ + std::string (". This Method is not yet implemented."))
-#define LOGGER ienium::utils::LoggerManager::GetInstance ().GetLogger ()
 
 using namespace ienium::utils;
 
@@ -21,6 +19,7 @@ namespace ienium::glow
 
         private:
         VertexBufferManager vertexBufferManager;
+        RenderMemoryManager renderMemoryManager;
 
 
         public:
@@ -29,6 +28,7 @@ namespace ienium::glow
         void Initialize ()
         {
             vertexBufferManager.Initialize ();
+            renderMemoryManager.InitializePools ();
         }
 
         void Shutdown ()
@@ -43,12 +43,12 @@ namespace ienium::glow
 
         void BeginFrame ()
         {
-            NOT_YET_IMPLEMENTED;
+            renderMemoryManager.ResetAllPools ();
         }
 
         void EndFrame ()
         {
-            NOT_YET_IMPLEMENTED;
+            
         }    
 
         void SetCamera (const Camera2D& camera)
@@ -114,8 +114,8 @@ namespace ienium::glow
 
         void DrawSprite (const Vector2& position, ResourceId texture_id)
         {
-            NOT_YET_IMPLEMENTED;
-            LOGGER->Log (utils::IENIUM_WARNING, "Sprite functionality not yet implemented. Only redners single colord quad!");
+            //NOT_YET_IMPLEMENTED;
+            //LOGGER->Log (utils::IENIUM_WARNING, "Sprite functionality not yet implemented. Only redners single colord quad!");
 
             std::vector<Vector2> mesh = {
                 Vector2 (-0.5,-0.5) + position,
@@ -123,6 +123,8 @@ namespace ienium::glow
                 Vector2 (0.5, 0.5) + position,
                 Vector2 (-0.5, 0.5) + position,
             };
+
+            renderMemoryManager.GetMemoryChunk(1000);
 
             vertexBufferManager.FillSpriteBuffer (mesh, mesh);
             vertexBufferManager.DrawSpriteBuffer ();

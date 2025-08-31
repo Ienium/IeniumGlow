@@ -72,10 +72,12 @@ int main ()
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //renderer.Clear (Color::Red ());
         glUseProgram (program_id);
-        
+        renderer.BeginFrame ();
+
         renderer.DrawSprite(Vector2(-0.5,-0.5), 0);
         renderer.DrawSprite(Vector2(0.5,0.5), 0);
-
+        
+        renderer.EndFrame ();
 
         glfwSwapBuffers (window);
         glfwPollEvents ();

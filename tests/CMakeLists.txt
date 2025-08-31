@@ -1,1 +1,2 @@
 add_subdirectory(vector_test)
+add_subdirectory(blend_enum_test)
