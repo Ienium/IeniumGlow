@@ -4,10 +4,12 @@
 #include <GL/glew.h>
 
 #include "ienium/glow/vertexbuffermanager.hpp"
+#include "ienium/glow/memorymanager.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
 
 #define VERTEX_SIZE 2   // 2 Diemnsions
 
+using namespace ienium::glow;
 namespace ienium
 {
     void VertexBufferManager::Initialize ()
@@ -22,10 +24,12 @@ namespace ienium
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
 
         // data order : [x,y,u,v]->[x,y,u,v]
-        glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);                          // X,Y => stride = 4, offset = 0
-        glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof (float)));       // U,V => stride = 4, offset = 2
+        glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);                          // X,Y => stride = 8, offset = 0
+        glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof (float)));       // U,V => stride = 8, offset = 2
+        glVertexAttribPointer (2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof (float)));       // R,G,B,A => stride = 8, offset = 4
         glEnableVertexAttribArray (0);
         glEnableVertexAttribArray (1);
+        glEnableVertexAttribArray (2);
 
         // Unbind to be safe
         glBindVertexArray(0);
@@ -41,7 +45,7 @@ namespace ienium
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, ebo_id);
 
         glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
-        glBufferData (GL_ARRAY_BUFFER, MAX_VERTiCES * 4 *  sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData (GL_ARRAY_BUFFER, MAX_VERTiCES * 8 *  sizeof(float), nullptr, GL_DYNAMIC_DRAW);
 
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
         glBufferData (GL_ELEMENT_ARRAY_BUFFER, MAX_INDICES * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
@@ -92,9 +96,26 @@ namespace ienium
         delete[] ebo;
     }
 
+    void VertexBufferManager::FillSpriteBuffer (MemoryChunk* vbo, MemoryChunk* ebo)
+    {
+        glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
+        glBufferSubData (GL_ARRAY_BUFFER, 0, vbo->currentSize, vbo->data);
+
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
+        glBufferSubData (GL_ELEMENT_ARRAY_BUFFER, 0, ebo->currentSize, ebo->data);
+    }
+
     void VertexBufferManager::DrawSpriteBuffer () const
     {
         glBindVertexArray (spriteVAOId);
         glDrawElements (GL_TRIANGLES, spriteQuadCount * 6,GL_UNSIGNED_INT, 0);
     }
+
+    void VertexBufferManager::DrawSpriteBuffer (unsigned int sprite_count) const
+    {
+        glBindVertexArray (spriteVAOId);
+        glDrawElements (GL_TRIANGLES, sprite_count * 6,GL_UNSIGNED_INT, 0);
+    }
+
+
 }

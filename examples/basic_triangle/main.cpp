@@ -1,4 +1,5 @@
 #include "ienium/glow/core/Vector.hpp"
+#include "ienium/utils/color/ieniumcolor.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <string>
@@ -70,12 +71,24 @@ int main ()
     while (!glfwWindowShouldClose (window) && !glfwGetKey(window, GLFW_KEY_ESCAPE ))
     {
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //renderer.Clear (Color::Red ());
+
         glUseProgram (program_id);
+        
         renderer.BeginFrame ();
 
-        renderer.DrawSprite(Vector2(-0.5,-0.5), 0);
-        renderer.DrawSprite(Vector2(0.5,0.5), 0);
+        for (int i = 0; i < 100; i++)
+        {
+            renderer.SetLayer(0);
+            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(0.5,0.5), 0);
+            renderer.SetLayer(1);
+            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(-0.5,-0.5), 0);
+            renderer.SetLayer(2);
+            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(-0.5,0.5), 0);
+            renderer.SetLayer(3);
+            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(0.5,-0.5), 0);
+        }
+        
+        //renderer.DrawSprite(Vector2(0.5,0.5), Vector2(-0.5,-0.5), 0);
         
         renderer.EndFrame ();
 

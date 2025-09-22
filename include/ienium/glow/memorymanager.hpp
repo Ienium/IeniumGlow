@@ -6,23 +6,25 @@
 
 namespace ienium::glow
 {
+    struct MemoryChunk
+    {
+        void* data;
+        size_t currentSize = 0;
+        size_t maxSize = 0;
+        size_t poolIndex = -1;
+        int poolType;
+        bool isUsed = false;
+    };
+
     class RenderMemoryManager
     {
-        public:
-        struct MemoryChunk
-        {
-            void* data;
-            size_t size = 0;
-            size_t poolIndex = -1;
-            int poolType;
-            bool isUsed = false;
-        };
-        
+        public:        
         void DefineChunkSizes (size_t tiny_size, size_t small_size, size_t medium_size, size_t large_size);
         void DefinePoolSizes (size_t tiny_size, size_t small_size, size_t medium_size, size_t large_size);
         void InitializePools ();
 
-        MemoryChunk* GetMemoryChunk (size_t required_size);
+        MemoryChunk* RequestMemoryChunk (size_t required_size);
+        MemoryChunk* RequestInitialMemoryChunk ();
 
         void ReleaseChunk (MemoryChunk* memory_chunk);
 
@@ -63,6 +65,6 @@ namespace ienium::glow
         void DeletePools ();
 
         PoolType FindBestPoolType (size_t required_size);
-        MemoryChunk* AllocateFromPool (PoolType poolType, size_t required_size);
+        MemoryChunk* AllocateFromPool (PoolType poolType);
     };
 }

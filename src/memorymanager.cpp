@@ -2,9 +2,7 @@
 #include "ienium/glow/core/internaldefinitions.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
 #include <cstddef>
-#include <cstdint>
 #include <new>
-#include <print>
 #include <vector>
 
 using namespace ienium::utils;
@@ -33,7 +31,7 @@ namespace ienium::glow
         AllocateMemoryPools ();
     }
 
-    RenderMemoryManager::MemoryChunk* RenderMemoryManager::GetMemoryChunk (size_t required_size)
+    MemoryChunk* RenderMemoryManager::RequestMemoryChunk (size_t required_size)
     {
         auto pool_type = FindBestPoolType (required_size);
         if (pool_type == POOL_COUNT)
@@ -43,10 +41,17 @@ namespace ienium::glow
         }
             
 
-        return AllocateFromPool (pool_type, required_size);
+        return AllocateFromPool (pool_type);
     }
 
-    void RenderMemoryManager::ReleaseChunk (RenderMemoryManager::MemoryChunk* memory_chunk)
+    MemoryChunk* RenderMemoryManager::RequestInitialMemoryChunk ()
+    {
+        auto pool_type = PoolType::MEDIUM;
+
+        return AllocateFromPool (pool_type);
+    }
+
+    void RenderMemoryManager::ReleaseChunk (MemoryChunk* memory_chunk)
     {
          std::lock_guard<std::mutex> lock(pools[memory_chunk->poolType].poolMutex);
         if (!memory_chunk || !memory_chunk->isUsed)
@@ -56,7 +61,7 @@ namespace ienium::glow
         }
             
 
-        memory_chunk->size = 0;
+        memory_chunk->currentSize = 0;
         memory_chunk->isUsed = false;
         pools[memory_chunk->poolType].freeChunks.push_back (memory_chunk->poolIndex);
     }
@@ -73,7 +78,7 @@ namespace ienium::glow
             for (auto& chunk : pool->chunks)
             {
                 chunk.isUsed = false;
-                chunk.size = 0;
+                chunk.currentSize = 0;
                 pool->freeChunks.push_back (chunk.poolIndex);
             }
         }
@@ -91,7 +96,6 @@ namespace ienium::glow
             std::lock_guard<std::mutex> lock(pools[i].poolMutex);
             auto& pool = pools[i];
             pool.chunkSize = chunkSizes[i];
-
             pool.chunks = std::vector<MemoryChunk> (poolSizes[i]);
             
             for (size_t j = 0; j < poolSizes[i]; ++j)
@@ -99,7 +103,7 @@ namespace ienium::glow
                 pool.chunks[j].poolIndex = j;
                 pool.freeChunks.push_back (j);
                 pool.chunks[j].isUsed = false;
-                pool.chunks[j].size = 0;
+                pool.chunks[j].maxSize = chunkSizes[PoolType(i)];
                 pool.chunks[j].poolType = PoolType(i);
             }
         }
@@ -157,11 +161,10 @@ namespace ienium::glow
         return PoolType(i);
     }
 
-    RenderMemoryManager::MemoryChunk* RenderMemoryManager::AllocateFromPool (RenderMemoryManager::PoolType pool_type, size_t required_size)
+    MemoryChunk* RenderMemoryManager::AllocateFromPool (RenderMemoryManager::PoolType pool_type)
     {
         std::lock_guard<std::mutex> lock(pools[pool_type].poolMutex);
         auto& pool = pools[pool_type];
-
         if (pool.freeChunks.empty ())
         {
             // TODO: Increase pool size for this pool type for next frame. And use larger available pool for this frame
@@ -174,7 +177,7 @@ namespace ienium::glow
         auto selected_chunk = &pool.chunks[pool.freeChunks.back ()];
         pool.freeChunks.pop_back ();
         selected_chunk->isUsed = true;
-        selected_chunk->size = required_size;
+        //selected_chunk->maxSize = required_size;
 
         return selected_chunk;
     }

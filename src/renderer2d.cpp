@@ -2,6 +2,7 @@
 #include "ienium/glow/memorymanager.hpp"
 #include "ienium/glow/vertexbuffermanager.hpp"
 #include "ienium/glow/core/internaldefinitions.hpp"
+#include "ienium/glow/batch_renderer.hpp"
 
 #include <GL/glew.h>
 #include <memory>
@@ -20,6 +21,8 @@ namespace ienium::glow
         private:
         VertexBufferManager vertexBufferManager;
         RenderMemoryManager renderMemoryManager;
+        std::unique_ptr<BatchingSystem> batchingSystem;
+        int currentLayer = 0;
 
 
         public:
@@ -29,6 +32,7 @@ namespace ienium::glow
         {
             vertexBufferManager.Initialize ();
             renderMemoryManager.InitializePools ();
+            batchingSystem =  std::make_unique<BatchingSystem> (vertexBufferManager, renderMemoryManager);
         }
 
         void Shutdown ()
@@ -44,11 +48,12 @@ namespace ienium::glow
         void BeginFrame ()
         {
             renderMemoryManager.ResetAllPools ();
+            batchingSystem->BeginFrame (); 
         }
 
         void EndFrame ()
         {
-            
+            batchingSystem->EndFrame ();
         }    
 
         void SetCamera (const Camera2D& camera)
@@ -58,7 +63,7 @@ namespace ienium::glow
 
         void SetLayer (int layer)
         {
-            NOT_YET_IMPLEMENTED;
+            currentLayer = layer;
         } 
 
         void DrawLine (const Vector2& start, const Vector2& end, const utils::Color& color, float thickness)
@@ -124,7 +129,7 @@ namespace ienium::glow
                 Vector2 (-0.5, 0.5) + position,
             };
 
-            renderMemoryManager.GetMemoryChunk(1000);
+            renderMemoryManager.RequestMemoryChunk(1000);
 
             vertexBufferManager.FillSpriteBuffer (mesh, mesh);
             vertexBufferManager.DrawSpriteBuffer ();
@@ -132,7 +137,8 @@ namespace ienium::glow
 
         void DrawSprite (const Vector2& size, const Vector2& position, ResourceId texture_id, const utils::Color& tint, const Vector2& texture_scale, const Vector2& texture_offset, float angle) const
         {
-            NOT_YET_IMPLEMENTED;
+            auto& batch = batchingSystem->RequestBatch(currentLayer, texture_id, RenderType::SPRITE);
+            batchingSystem->AddSpriteRenderCommand (batch, size, position, texture_id, tint, texture_scale, texture_offset, angle);
         }
     };
 

@@ -2,6 +2,7 @@
 
 #include "ienium/glow/core/Vector.hpp"
 #include "ienium/glow/renderer2d.hpp"
+#include "memorymanager.hpp"
 
 #include <vector>
 
@@ -20,7 +21,9 @@ namespace ienium
 
         
         void FillSpriteBuffer (const std::vector<Vector2>& vertices, const std::vector<Vector2>& uvs);
+        void FillSpriteBuffer (glow::MemoryChunk* vbo, glow::MemoryChunk* ebo);
         void DrawSpriteBuffer () const;
+        void DrawSpriteBuffer (unsigned int sprite_count) const;
 
         private:
         ResourceId spriteVBOId;

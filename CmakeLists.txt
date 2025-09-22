@@ -16,7 +16,7 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #set(CMAKE_TOOLCHAIN_FILE "F:/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
-cmake_minimum_required (VERSION 3.25)
+cmake_minimum_required (VERSION 3.12)
 project(IeniumGLow
     VERSION 0.1.0
     DESCRIPTION "2D Sprite Renderer"

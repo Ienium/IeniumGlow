@@ -3,6 +3,7 @@ set(SOURCES
     shader.cpp
     vertexbuffermanager.cpp
     memorymanager.cpp
+    batch_renderer.cpp
     core/Vector.cpp
 )
 

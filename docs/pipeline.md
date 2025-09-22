@@ -36,7 +36,7 @@ flowchart TB
 ```mermaid
 stateDiagram-v2
     [*] --> Free
-    Free --> Allocated : GetMemoryChunk()
+    Free --> Allocated : RequestMemoryChunk()
     Allocated --> FillingData : Fill vertex/index data
     FillingData --> ReadyForSubmit : Batch preparation complete
     ReadyForSubmit --> GPUCopy : glBufferSubData()
@@ -143,7 +143,7 @@ flowchart TD
     H -->|No| J[Wait in Queue]
     J --> H
     
-    I --> K[GetMemoryChunk]
+    I --> K[RequestMemoryChunk]
     K --> L{Memory Available?}
     L -->|Yes| M[Fill Vertex Data]
     L -->|No| N[Error Handling]
@@ -180,9 +180,9 @@ sequenceDiagram
         Batcher->>Thread1: Prepare Batch A
         Batcher->>Thread2: Prepare Batch B
     and
-        Note over Thread1: GetMemoryChunk(16KB)
+        Note over Thread1: RequestMemoryChunk(16KB)
         Thread1->>Thread1: Fill vertex data
-        Note over Thread2: GetMemoryChunk(12KB)
+        Note over Thread2: RequestMemoryChunk(12KB)
         Thread2->>Thread2: Fill vertex data
     end
     
@@ -203,7 +203,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A[GetMemoryChunk] --> B{Chunk Available?}
+    A[RequestMemoryChunk] --> B{Chunk Available?}
     B -->|Yes| C[Success Path]
     B -->|No| D[Memory Pool Full]
     
