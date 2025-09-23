@@ -30,6 +30,8 @@ namespace ienium::glow
 
         void ResetAllPools ();
 
+        void LogStats ();
+
         void Shutdown ();
 
 

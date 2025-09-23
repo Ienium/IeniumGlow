@@ -1,5 +1,8 @@
 #include "ienium/glow/core/Vector.hpp"
+#include "ienium/glow/core/internaldefinitions.hpp"
 #include "ienium/utils/color/ieniumcolor.hpp"
+#include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <string>
@@ -47,6 +50,7 @@ int main ()
         
 
     glfwMakeContextCurrent (window);
+    glfwSwapInterval(0);
     GLenum err = glewInit ();
     if (err != GLEW_OK)
     {
@@ -67,7 +71,8 @@ int main ()
 
     logger->Log(IENIUM_INFO, "GLFW3 | Starting window loop.");    
 
-
+    std::chrono::system_clock clock;
+    auto last_time = clock.now ();
     while (!glfwWindowShouldClose (window) && !glfwGetKey(window, GLFW_KEY_ESCAPE ))
     {
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -76,7 +81,7 @@ int main ()
         
         renderer.BeginFrame ();
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 10000; i++)
         {
             renderer.SetLayer(0);
             renderer.DrawSprite(Vector2(0.5,0.5), Vector2(0.5,0.5), 0);
@@ -94,6 +99,10 @@ int main ()
 
         glfwSwapBuffers (window);
         glfwPollEvents ();
+
+        auto diff = std::chrono::duration_cast<std::chrono::microseconds>(clock.now() - last_time).count();
+        LOGGER->Log(ienium::utils::IENIUM_DEBUG, "Frame time: " + std::to_string(diff) + "ms");
+        last_time = clock.now ();
     }
 
     glfwDestroyWindow (window);

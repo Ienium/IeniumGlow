@@ -1,11 +1,14 @@
 #include "ienium/glow/batch_renderer.hpp"
+#include "ienium/glow/core/internaldefinitions.hpp"
 #include "ienium/glow/core/publictypes.hpp"
 #include "ienium/glow/rendercommand.hpp"
 #include "ienium/glow/vertexbuffermanager.hpp"
+#include "ienium/utils/logger/ieniumlogger.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <print>
+#include <string>
 namespace ienium::glow
 {
     void BatchingSystem::BeginFrame ()
@@ -41,6 +44,9 @@ namespace ienium::glow
         }
 
         auto& batch = batches.at (hash);
+
+        if (batch.memoryChunksVBO.empty () && batch.lastMemorySize != INVALID_MEMORY_SIZE)
+            batch.memoryChunksVBO.push_back (memoryManager.RequestMemoryChunk(batch.lastMemorySize));
         return batch;
     }
 
@@ -102,14 +108,17 @@ namespace ienium::glow
 
     void BatchingSystem::ProcessSpriteBatch (RenderBatch& batch)
     {
+        batch.lastMemorySize = 0;
+
         for (auto memory_chunk : batch.memoryChunksVBO)
         {
             auto memory_as_render_command = static_cast<SpriteRenderCommand*>(memory_chunk->data);
             auto memory_as_buffer = static_cast<float*>(memory_chunk->data);
 
-            size_t draw_count_in_chunk = memory_chunk->currentSize / COMMAND_SIZE_MAP.at (SPRITE);
-            size_t ebo_size = 4 * draw_count_in_chunk;
-            MemoryChunk* ebo_chunk = memoryManager.RequestMemoryChunk (ebo_size);
+            size_t draw_count_in_chunk = memory_chunk->currentSize / ELEMENT_SIZE_MAP.at (SPRITE);
+            size_t required_ebo_size = 6 * draw_count_in_chunk * sizeof(unsigned int);
+
+            MemoryChunk* ebo_chunk = memoryManager.RequestMemoryChunk ( required_ebo_size);
 
             auto ebo_chunk_as_ebo = static_cast<unsigned int*>(ebo_chunk->data);
             for (size_t index = 0; index < draw_count_in_chunk; index++)
@@ -122,7 +131,7 @@ namespace ienium::glow
                 ebo_chunk_as_ebo[index * 6 + 0] = (unsigned int)(index) * 4;
             }
 
-            ebo_chunk->currentSize = 6 * sizeof(unsigned int) * ebo_size;
+            ebo_chunk->currentSize = required_ebo_size;
 
             batch.memoryChunksEBO.push_back (ebo_chunk);
 
@@ -166,6 +175,7 @@ namespace ienium::glow
                 memory_as_buffer[index * 32 + 30] = command.tint.b ();
                 memory_as_buffer[index * 32 + 31] = command.tint.a ();
             }
+            batch.lastMemorySize += memory_chunk->currentSize;
         }
     }
 

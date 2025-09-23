@@ -54,6 +54,7 @@ namespace ienium::glow
         void EndFrame ()
         {
             batchingSystem->EndFrame ();
+            //renderMemoryManager.LogStats ();
         }    
 
         void SetCamera (const Camera2D& camera)

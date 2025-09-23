@@ -41,7 +41,7 @@ namespace ienium::glow
         std::vector<MemoryChunk*> memoryChunksEBO;
 
         size_t draw_count = 0;
-        size_t lastMemorySize = -1;
+        size_t lastMemorySize = INVALID_MEMORY_SIZE;
 
         RenderBatch (int layer, ResourceId texture_id, RenderType type) : 
         layer (layer), textureId (texture_id), type (type) {}

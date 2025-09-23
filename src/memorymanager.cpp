@@ -3,6 +3,7 @@
 #include "ienium/utils/logger/ieniumlogger.hpp"
 #include <cstddef>
 #include <new>
+#include <string>
 #include <vector>
 
 using namespace ienium::utils;
@@ -82,6 +83,37 @@ namespace ienium::glow
                 pool->freeChunks.push_back (chunk.poolIndex);
             }
         }
+    }
+
+    void RenderMemoryManager::LogStats ()
+    {
+        int used_pools [4];
+        int counter = 0;
+
+        std::vector<MemoryChunk*> used_chunks;
+        for (auto& pool : pools)
+        {
+            used_pools [counter] = 0;
+            for (auto& chunk : pool.chunks)
+            {
+                if (chunk.isUsed)
+                {
+                    used_pools [counter] ++;
+                    used_chunks.push_back (&chunk);
+                }
+                
+            }
+
+            counter ++;
+        }
+
+        std::string msg = "Memory chunks in use:\t" + std::to_string (used_pools[0]) + " | " + std::to_string (used_pools[1]) + " | " + std::to_string (used_pools[2]) + " | " + std::to_string (used_pools[3]) + " | ";
+        for (auto chunk : used_chunks)
+        {
+            msg.append ("\nMax Size:\t" + std::to_string(chunk->maxSize) + "\tCurrent Size:\t" + std::to_string(chunk->currentSize));
+        }
+        
+        LOGGER->Log(utils::IENIUM_INFO, msg);
     }
 
     void RenderMemoryManager::Shutdown ()
