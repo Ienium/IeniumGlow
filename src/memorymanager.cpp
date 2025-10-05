@@ -1,258 +1,218 @@
 #include "ienium/glow/memorymanager.hpp"
 #include "ienium/glow/core/internaldefinitions.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
+
 #include <cstddef>
-#include <new>
-#include <string>
-#include <vector>
+#include <mutex>
+#include <print>
+#include <thread>
 
-using namespace ienium::utils;
 
-namespace ienium::glow
-{
-    void RenderMemoryManager::DefineChunkSizes (size_t tiny_size, size_t small_size, size_t medium_size, size_t large_size)
+namespace ienium {
+    using namespace utils;
+    size_t MemoryManager::allocatedMemory = 0;
+
+    void MemoryManager::CheckMemoryLeak ()
     {
-        chunkSizes[0] = tiny_size;
-        chunkSizes[1] = small_size;
-        chunkSizes[2] = medium_size;
-        chunkSizes[3] = large_size;
-    }
-
-    void RenderMemoryManager::DefinePoolSizes (size_t tiny_size, size_t small_size, size_t medium_size, size_t large_size)
-    {
-        poolSizes[0] = tiny_size;
-        poolSizes[1] = small_size;
-        poolSizes[2] = medium_size;
-        poolSizes[3] = large_size;
-    }
-
-    void RenderMemoryManager::InitializePools ()
-    {
-        CreatePools ();
-        AllocateMemoryPools ();
-    }
-
-    MemoryChunkInfo RenderMemoryManager::RequestMemoryChunk (size_t required_size)
-    {
-        auto pool_type = FindBestPoolType (required_size);
-        if (pool_type == POOL_COUNT)
+        if (allocatedMemory > 0)
         {
-            //return nullptr;
-            pool_type = (PoolType) (POOL_COUNT -1);
-            LOGGER->Log (utils::IENIUM_ERROR, "Required memory size exceed maximum chunk size.");
+            std::println("Not all MemoryManagers shutdown! {} bytes are still allocated!", allocatedMemory);
         }
-            
 
-        auto chunk = AllocateFromPool (pool_type);
-        return MemoryChunkInfo(chunk->poolType, chunk->poolIndex);
     }
 
-    MemoryChunkInfo RenderMemoryManager::RequestInitialMemoryChunk ()
+    MemoryManagerStats MemoryManager::GetStats ()
     {
-        auto pool_type = PoolType::MEDIUM;
+        MemoryManagerStats stats;
+        stats.allocatedMemory = allocatedMemory;
+        stats.mainBlockStats.size = memoryBlock.size;
+        stats.mainBlockStats.usedSize = memoryBlock.usedSize;
 
-        auto chunk = AllocateFromPool (pool_type);
-
-        return MemoryChunkInfo(chunk->poolType, chunk->poolIndex);
-    }
-
-    MemoryChunk* RenderMemoryManager::GetChunk (const MemoryChunkInfo& memory_chunk_info)
-    {
-        return &pools[memory_chunk_info.poolType].chunks[memory_chunk_info.poolIndex];
-    }
-
-    void RenderMemoryManager::ReleaseChunk (const MemoryChunkInfo& memory_chunk_info)
-    {
-        MemoryChunk& memory_chunk = pools[memory_chunk_info.poolType].chunks[memory_chunk_info.poolIndex];
-        std::lock_guard<std::mutex> lock(pools[memory_chunk_info.poolType].poolMutex);
-        if (!memory_chunk.isUsed)
+        for (auto backupBlock : backupBlocks)
         {
-            LOGGER->Log (utils::IENIUM_WARNING, "Tried to release a nonexistant or already released memory chunk.");
-            return;
+            MemoryBlockStats block_stats;
+            block_stats.size = backupBlock.size;
+            block_stats.usedSize = backupBlock.usedSize;
+            stats.backupBlockStats.push_back (block_stats);
         }
-            
 
-        memory_chunk.currentSize = 0;
-        memory_chunk.isUsed = false;
-        pools[memory_chunk.poolType].freeChunks.push_back (memory_chunk.poolIndex);
+        return stats;
     }
 
-    void RenderMemoryManager::ResetAllPools ()
+    void MemoryManager::Initialize (size_t initial_size)
     {
-        for (int i = 0; i < POOL_COUNT; ++i)
-        {
-            std::lock_guard<std::mutex> lock(pools[i].poolMutex);
-            auto pool = &pools[i];
+        memoryBlock.data = operator new (initial_size);
+        memoryBlock.size = initial_size;
+        allocatedMemory += initial_size;
+    }
 
-            pool->freeChunks.clear ();
-            
-            for (auto& chunk : pool->chunks)
+    void MemoryManager::Shutdown ()
+    {
+        operator delete (memoryBlock.data);
+        allocatedMemory -= memoryBlock.size;
+
+        for (auto& backupBlock : backupBlocks)
+        {
+            operator delete (backupBlock.data);
+            allocatedMemory -= backupBlock.size;
+        }
+
+        backupBlocks.clear ();
+    }
+
+    MemoryChunkPos MemoryManager::RequestMemoryChunk (size_t required_size, size_t align)
+    {
+        required_size += align;
+        MemoryBlock* block_to_use = nullptr;
+        size_t block_index = -1;
+        if (required_size == INVALID_SIZE)
+            required_size = DEFAULT_SIZE;
+
+        if (memoryBlock.usedSize + required_size > memoryBlock.size)
+        {
+            block_index = 0;
+            for (auto& backup_block : backupBlocks)
             {
-                chunk.isUsed = false;
-                chunk.currentSize = 0;
-                pool->freeChunks.push_back (chunk.poolIndex);
-            }
-        }
-    }
-
-    void RenderMemoryManager::LogStats ()
-    {
-        int used_pools [4];
-        int counter = 0;
-
-        std::vector<MemoryChunk*> used_chunks;
-        for (auto& pool : pools)
-        {
-            used_pools [counter] = 0;
-            for (auto& chunk : pool.chunks)
-            {
-                if (chunk.isUsed)
+                if (backup_block.usedSize + required_size <= backup_block.size)
                 {
-                    used_pools [counter] ++;
-                    used_chunks.push_back (&chunk);
+                    block_to_use = &backup_block;
+                    break;
                 }
+                block_index++;
             }
-            counter ++;
+
+            if (block_to_use == nullptr)
+            {
+                LOGGER->Log(IENIUM_WARNING, "Out of Memory, allocating new block!");
+                AddBlock(10 * required_size);
+                block_to_use = &backupBlocks.back ();
+            }
+        }
+        else
+        {
+            block_to_use = &memoryBlock;
         }
 
-        std::string msg = "Memory chunks allocated:\t" + std::to_string(pools[0].chunks.size()) + " | " + std::to_string(pools[1].chunks.size()) + " | " + std::to_string(pools[2].chunks.size()) + " | " + std::to_string(pools[3].chunks.size()) + "\n";
-        msg += "Memory chunks in use:\t\t" + std::to_string (used_pools[0]) + " | " + std::to_string (used_pools[1]) + " | " + std::to_string (used_pools[2]) + " | " + std::to_string (used_pools[3]);
-        for (auto chunk : used_chunks)
+        MemoryChunk& chunk = block_to_use->chunks.emplace_back();
+        chunk.startIndex = block_to_use->usedSize;
+        chunk.alignedStartIndex = (chunk.startIndex + align - 1) & ~(align - 1);
+        chunk.size = required_size;
+        chunk.blockData = block_to_use->data;
+        chunk.usedSize = chunk.alignedStartIndex - chunk.startIndex;
+
+        block_to_use->usedSize += required_size;
+
+        return {block_index,block_to_use->chunks.size () - 1};
+    }
+
+    MemoryChunk* MemoryManager::GetMemoryChunk (const MemoryChunkPos& chunk_pos)
+    {
+        if (chunk_pos.blockIndex == (size_t)-1)
+            return &memoryBlock.chunks[chunk_pos.chunkIndex];
+
+        return &backupBlocks[chunk_pos.blockIndex].chunks[chunk_pos.chunkIndex];
+
+    }
+
+    void MemoryManager::ResetMemoryChunks ()
+    {
+        memoryBlock.chunks.clear ();
+        memoryBlock.usedSize = 0;
+
+        for (auto& backup_block : backupBlocks)
         {
-            msg.append ("\nMax Size:\t" + std::to_string(chunk->maxSize) + "\tCurrent Size:\t" + std::to_string(chunk->currentSize));
+            backup_block.chunks.clear ();
+            backup_block.usedSize = 0;
         }
+    }
+
+    void MemoryManager::AddBlock (size_t required_size)
+    {
+        MemoryBlock backupBlock;
+        backupBlock.data = operator new (required_size);
+        backupBlock.size = required_size;
+        allocatedMemory += required_size;
+        backupBlocks.push_back (backupBlock);
+    }
+
+    void MemoryManager::ExpandBlock ()
+    {
+        expandCommandsMutex.lock ();
+            if (expandCommand.active || backupBlocks.empty ())
+            {
+                expandCommandsMutex.unlock ();
+                return;
+            }        
+
+            size_t required_memory = memoryBlock.size;
+
+            if (!backupBlocks.empty())
+                expandCommand.active = true;
+
+            for (auto& backupBlock : backupBlocks)
+            {
+                required_memory += backupBlock.size;
+            }
+            expandCommand.allocatedMemory = INVALID_SIZE;
+
+        expandCommandsMutex.unlock ();
+
+
+
+        std::thread expand_thread (AllocateAsync, required_memory, this);
+
+        expand_thread.detach ();
+    }
+
+
+
+    void MemoryManager::FreeUnused ()
+    {
+        expandCommandsMutex.lock ();
+            if (expandCommand.active && expandCommand.allocatedMemory != INVALID_SIZE)
+            {
+                size_t required_memory = memoryBlock.size;
+
+                allocationMutex.lock ();
+                    size_t initial_size = backupBlocks.size ();
+                    for (size_t i = 0; i < initial_size; i++)
+                    {
+                        auto& block = backupBlocks[0];
+                        required_memory += block.size;
+                        if (required_memory <= expandCommand.allocatedMemory)
+                        {
+                            operator delete (block.data);
+                            allocatedMemory -= block.size;
+                            backupBlocks.erase(backupBlocks.begin());
+                        }
+                        else
+                            break;
+                    }
+
+                allocationMutex.unlock ();
+                
+                operator delete(memoryBlock.data);
+                allocatedMemory -= memoryBlock.size;
+
+                memoryBlock.data = expandCommand.data;
+                memoryBlock.size = expandCommand.allocatedMemory;
+                
+                expandCommand.allocatedMemory = INVALID_SIZE;
+                expandCommand.active = false;
+            }
+        expandCommandsMutex.unlock ();
+    }
+
+    void MemoryManager::AllocateAsync (size_t required_size, MemoryManager* memory_manager)
+    {
+        memory_manager->expandCommandsMutex.lock ();
+            memory_manager->expandCommand.data = operator new (required_size);
+            memory_manager->expandCommand.allocatedMemory = required_size;
+        memory_manager->expandCommandsMutex.unlock ();
         
-        LOGGER->Log(utils::IENIUM_INFO, msg);
-    }
-
-    void RenderMemoryManager::Shutdown ()
-    {
-        DeletePools ();
-    }
-
-    void RenderMemoryManager::CreatePools ()
-    {
-        for (int i = 0; i < POOL_COUNT; ++i)
-        {
-            std::lock_guard<std::mutex> lock(pools[i].poolMutex);
-            auto& pool = pools[i];
-            pool.chunkSize = chunkSizes[i];
-            pool.chunks = std::vector<MemoryChunk> (poolSizes[i]);
-            pool.poolType = i;
-            
-            for (size_t j = 0; j < poolSizes[i]; ++j)
-            {
-                pool.chunks[j].poolIndex = j;
-                pool.freeChunks.push_back (j);
-                pool.chunks[j].isUsed = false;
-                pool.chunks[j].maxSize = chunkSizes[PoolType(i)];
-                pool.chunks[j].poolType = PoolType(i);
-            }
-        }
-    }
-
-    void RenderMemoryManager::AddChunks (MemoryPool* pool, size_t chunk_count)
-    {
-        size_t current_index = pool->chunks.size ();
-        for (size_t i = 0; i < chunk_count; i++)
-        {
-            MemoryChunk chunk;
-            chunk.poolIndex = current_index;
-            chunk.maxSize = pool->chunkSize;
-            chunk.poolType = pool->poolType;
-            chunk.isUsed = false;
-            chunk.data = operator new (pool->chunkSize);
-            pool->chunks.push_back(chunk);
-            pool->freeChunks.push_back (current_index);
-
-            current_index++;
-        }
-    }
-
-    void RenderMemoryManager::AllocateMemoryPools ()
-    {
-        size_t total_chunk_count = 0;
-        size_t total_allocated_memory = 0;
-        for (int i = 0; i < POOL_COUNT; ++i)
-        {
-            std::lock_guard<std::mutex> lock(pools[i].poolMutex);
-            auto pool = &pools[i];
-
-            for (auto& chunk : pool->chunks)
-            {
-                chunk.data = operator new (pool->chunkSize);
-                ++total_chunk_count;
-                total_allocated_memory += pool->chunkSize;
-            }
-        }
-
-        LOGGER->Log (utils::IENIUM_INFO, "Allocated memory pools:\n"
-            "Tiny pool:\t" + std::to_string(poolSizes[TINY]) + " chunks\t" + std::to_string(chunkSizes[TINY]) + " Bytes =>\t\t" + std::to_string(poolSizes[TINY]*chunkSizes[TINY]) + " Bytes\n"
-            "Small pool:\t" + std::to_string(poolSizes[SMALL]) + " chunks\t" + std::to_string(chunkSizes[SMALL]) + " Bytes =>\t\t" + std::to_string(poolSizes[SMALL]*chunkSizes[SMALL]) + " Bytes\n"
-            "Medium pool:\t" + std::to_string(poolSizes[MEDIUM]) + " chunks\t" + std::to_string(chunkSizes[MEDIUM]) + " Bytes =>\t\t" + std::to_string(poolSizes[MEDIUM]*chunkSizes[MEDIUM]) + " Bytes\n"
-            "Large pool:\t" + std::to_string(poolSizes[LARGE]) + " chunks\t" + std::to_string(chunkSizes[LARGE]) + " Bytes =>\t" + std::to_string(poolSizes[LARGE]*chunkSizes[LARGE]) + " Bytes\n"
-            "Total : \t" + std::to_string(total_chunk_count) + " chunks\t\t\t\t" + std::to_string(total_allocated_memory) + " Bytes"
-        );
-    }
-
-    void RenderMemoryManager::DeletePools ()
-    {
-        for (int i = 0; i < POOL_COUNT; ++i)
-        {
-            std::lock_guard<std::mutex> lock(pools[i].poolMutex);
-            auto pool = &pools[i];
-
-            for (auto& chunk : pool->chunks)
-            {
-                operator delete (chunk.data);
-            }
-        }
-    }
-
-    RenderMemoryManager::PoolType RenderMemoryManager::FindBestPoolType (size_t required_size) const
-    {
-        int i = 0;
-        for (i = 0; i < POOL_COUNT; ++i)
-        {
-            if (required_size <= chunkSizes[i])
-                break;
-        }
-
-        return PoolType(i);
-    }
-
-    MemoryChunk* RenderMemoryManager::AllocateFromPool (RenderMemoryManager::PoolType pool_type)
-    {
-        std::lock_guard<std::mutex> lock(pools[pool_type].poolMutex);
-        const auto requested_pool_type = pool_type;
-        auto pool = &pools[pool_type];
-        while (pool->freeChunks.empty ())
-        {
-            // TODO: Increase pool size for this pool type for next frame. And use larger available pool for this frame
-            // If no larger pool available: Create new chunk on the fly
-            // Create on the fly right here, pool increasing at end of frame (count how many pools are missing over the frame)
-            //LOGGER->Log (utils::IENIUM_WARNING, "No memory chunks available in requested pool. Trying larger pool if available");
-            if (pool_type < LARGE)
-            {
-                pool_type = (PoolType) (pool_type + 1);
-                pool = &pools[pool_type];
-                continue;
-            }
-            else {
-                LOGGER->Log (IENIUM_ERROR, "No larger pool available. Allocating new memory.");
-                AddChunks(&pools[requested_pool_type], 10);
-                pool_type = requested_pool_type;
-                pool = &pools[pool_type];
-                continue;
-            }
-            return nullptr;
-        }
-
-        auto selected_chunk = &pool->chunks[pool->freeChunks.back ()];
-        pool->freeChunks.pop_back ();
-        selected_chunk->isUsed = true;
-        //selected_chunk->maxSize = required_size;
-
-        return selected_chunk;
+        memory_manager->allocationMutex.lock ();
+            allocatedMemory += required_size;
+        memory_manager->allocationMutex.unlock ();
+        LOGGER->Log(utils::IENIUM_INFO, "New Block allocated: " + std::to_string(required_size) + "bytes");       
     }
 }

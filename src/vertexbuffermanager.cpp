@@ -1,4 +1,5 @@
 #include <iostream>
+#include <print>
 #include <string>
 #include <vector>
 
@@ -102,17 +103,33 @@ namespace ienium
 
     void VertexBufferManager::FillSpriteBuffer (MemoryChunk* vbo, MemoryChunk* ebo)
     {
+        auto vbo_data = static_cast<float*>(vbo->blockData) + vbo->startIndex;
+        auto ebo_data = static_cast<uint32_t*>(ebo->blockData) + ebo->startIndex;
+
+        //std::println("#############################");
+        //for (int i = 0; i < 32; i++)
+        //{
+        //    std::println("{}", vbo_data[i]);
+        //}
+        //std::println("#############################");
+//
+        //for (int i = 0; i < 6; i++)
+        //{
+        //    std::println("{}", ebo_data[i]);
+        //}
+        //std::println("#############################");
+
         glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
-        std::cout << glewGetErrorString(glGetError()) << std::endl;
-        std::cout << vbo->currentSize << std::endl;
-        glBufferSubData (GL_ARRAY_BUFFER, 0, vbo->currentSize, vbo->data);
-        std::cout << glewGetErrorString(glGetError()) << std::endl;
+        //std::cout << glewGetErrorString(glGetError()) << std::endl;
+        //std::cout << vbo->usedSize << std::endl;
+        glBufferSubData (GL_ARRAY_BUFFER, 0, vbo->usedSize, static_cast<char*>(vbo->blockData) + vbo->startIndex);
+        //std::cout << glewGetErrorString(glGetError()) << std::endl;
         
 
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
-        std::cout << glewGetErrorString(glGetError()) << std::endl;
-        glBufferSubData (GL_ELEMENT_ARRAY_BUFFER, 0, ebo->currentSize, ebo->data);
-        std::cout << glewGetErrorString(glGetError()) << std::endl;
+        //std::cout << glewGetErrorString(glGetError()) << std::endl;
+        glBufferSubData (GL_ELEMENT_ARRAY_BUFFER, 0, ebo->usedSize, static_cast<char*>(ebo->blockData) + ebo->startIndex);
+        //std::cout << glewGetErrorString(glGetError()) << std::endl;
     }
 
     void VertexBufferManager::DrawSpriteBuffer () const
@@ -126,6 +143,4 @@ namespace ienium
         glBindVertexArray (spriteVAOId);
         glDrawElements (GL_TRIANGLES, sprite_count * 6,GL_UNSIGNED_INT, 0);
     }
-
-
 }

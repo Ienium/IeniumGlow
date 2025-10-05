@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <print>
 #include <utility>
 #include <vector>
 #include <unordered_map>
@@ -31,20 +29,22 @@ namespace ienium::glow
         ResourceId textureId;
         RenderType type;
 
-        std::vector<MemoryChunkInfo> memoryChunksVBO;
-        std::vector<MemoryChunkInfo> memoryChunksEBO;
+        size_t vboAlign;
+        std::vector<MemoryChunkPos> memoryChunksVBO;
+        std::vector<MemoryChunkPos> memoryChunksEBO;
 
         size_t draw_count = 0;
+        size_t next_index = 0;
         size_t lastMemorySize = INVALID_MEMORY_SIZE;
 
-        RenderBatch (int layer, ResourceId texture_id, RenderType type)
-            : layer (layer), textureId (texture_id), type (type) {}
+        RenderBatch (int layer, ResourceId texture_id, RenderType type, size_t align)
+            : layer (layer), textureId (texture_id), type (type), vboAlign(align) {}
     };
 
     class BatchingSystem
     {
         public:
-        BatchingSystem (VertexBufferManager* vertex_buffer_manager, RenderMemoryManager* memory_manager)
+        BatchingSystem (VertexBufferManager* vertex_buffer_manager, MemoryManager* memory_manager)
             : vertexBufferManager(vertex_buffer_manager), memoryManager(memory_manager) {};
 
         void BeginFrame ();
@@ -62,20 +62,21 @@ namespace ienium::glow
         {
             
             // Request more memory if needed
-            if (batch.memoryChunksVBO.empty () || memoryManager->GetChunk (batch.memoryChunksVBO.back ())->currentSize + ELEMENT_SIZE_MAP.at (SPRITE) > memoryManager->GetChunk (batch.memoryChunksVBO.back ())->maxSize)
+            if (batch.memoryChunksVBO.empty () || memoryManager->GetMemoryChunk(batch.memoryChunksVBO.back ())->usedSize + ELEMENT_SIZE_MAP.at (SPRITE) > memoryManager->GetMemoryChunk(batch.memoryChunksVBO.back ())->size)
             {
-                batch.memoryChunksVBO.push_back (memoryManager->RequestInitialMemoryChunk ());
+                batch.memoryChunksVBO.push_back (memoryManager->RequestMemoryChunk (50 * sizeof(T), alignof(T)));
+                batch.next_index = 0;
             }
-            auto chunk = memoryManager->GetChunk (batch.memoryChunksVBO.back ());
+            auto chunk = memoryManager->GetMemoryChunk(batch.memoryChunksVBO.back ());
             // Instatiate Drawcommand on reqested memory
-            auto memory = static_cast<T*> (chunk->data);
+            auto memory = chunk->GetFirstValue<T> ();
+            memory[batch.next_index] = T(std::forward<Args>(args)...);
             //std::cout << batch.memoryChunksVBO.back ()->maxSize << std::endl;
             //std::cout << batch.memoryChunksVBO.back ()->currentSize << std::endl;
-            memory [batch.draw_count] = T{std::forward<Args>(args)...};
+            //chunk->WriteMemory<T> (T(std::forward<Args>(args)...), batch.next_index, memory);
+            chunk->usedSize += sizeof(T);
+            batch.next_index ++;
             batch.draw_count ++;
-
-            // Update used memory
-            chunk->currentSize += ELEMENT_SIZE_MAP.at (SPRITE);
         }
 
         void LogStats ();
@@ -84,7 +85,7 @@ namespace ienium::glow
         std::unordered_map<size_t, RenderBatch> batches = std::unordered_map<size_t, RenderBatch>();
 
         VertexBufferManager* vertexBufferManager;
-        RenderMemoryManager* memoryManager;
+        MemoryManager* memoryManager;
 
         std::unordered_map<RenderType, size_t> ELEMENT_SIZE_MAP
         {

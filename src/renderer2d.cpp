@@ -20,7 +20,7 @@ namespace ienium::glow
 
         private:
         VertexBufferManager vertexBufferManager;
-        RenderMemoryManager renderMemoryManager;
+        MemoryManager renderMemoryManager;
         BatchingSystem batchingSystem = BatchingSystem(&vertexBufferManager, &renderMemoryManager);
         int currentLayer = 0;
 
@@ -31,7 +31,7 @@ namespace ienium::glow
         void Initialize ()
         {
             vertexBufferManager.Initialize ();
-            renderMemoryManager.InitializePools ();
+            renderMemoryManager.Initialize (4096);
             //batchingSystem = BatchingSystem(&vertexBufferManager, &renderMemoryManager);
         }
 
@@ -47,7 +47,10 @@ namespace ienium::glow
 
         void BeginFrame ()
         {
-            renderMemoryManager.ResetAllPools ();
+            renderMemoryManager.ResetMemoryChunks();
+            renderMemoryManager.FreeUnused();
+            renderMemoryManager.ExpandBlock();
+            
             batchingSystem.BeginFrame (); 
         }
 

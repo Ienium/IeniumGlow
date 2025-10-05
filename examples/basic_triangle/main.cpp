@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <print>
 #include <string>
+#include <thread>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -51,7 +52,7 @@ int main ()
         
 
     glfwMakeContextCurrent (window);
-    //glfwSwapInterval(0);
+    glfwSwapInterval(0);
     GLenum err = glewInit ();
     if (err != GLEW_OK)
     {
@@ -74,6 +75,7 @@ int main ()
 
     std::chrono::system_clock clock;
     auto last_time = clock.now ();
+
     while (!glfwWindowShouldClose (window) && !glfwGetKey(window, GLFW_KEY_ESCAPE ))
     {
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -84,22 +86,18 @@ int main ()
 
         for (int i = 0; i < 100000; i++)
         {
-            if (i==11284)
-            {
-                std::println("A");
-            }
             srand(i);
             float x = rand () % 100 / 75.f - 0.75;
             float y = rand () % 100 / 75.f - 0.75;
             float w = rand () % 100 / 200.f;
             float h = rand () % 100 / 200.f;
-
+        
             float r = rand () % 100 / 100.f;
             float g = rand () % 100 / 100.f;
             float b = rand () % 100 / 100.f;
-
-            int layer = 1;//(int) (rand () % 100 / 100.f * 4) ;
-
+        
+            int layer = (int) (rand () % 100 / 100.f * 4) ;
+        
             renderer.SetLayer(layer);
             renderer.DrawSprite(Vector2(w,h), Vector2(x,y), 0, utils::Color(r,g,b));
         }
@@ -114,6 +112,7 @@ int main ()
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(clock.now() - last_time).count();
         LOGGER->Log(ienium::utils::IENIUM_DEBUG, "Frame time: " + std::to_string(diff) + "us");
         last_time = clock.now ();
+        //std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     renderer.Shutdown ();
 

@@ -1,85 +1,120 @@
 #pragma once
 
+#include "ienium/glow/core/internaldefinitions.hpp"
+#include "ienium/utils/logger/ieniumlogger.hpp"
 #include <cstddef>
+#include <exception>
 #include <mutex>
+#include <print>
 #include <vector>
 
-namespace ienium::glow
+namespace ienium
 {
-    struct MemoryChunkInfo
-    {
-        int poolType;
-        size_t poolIndex;
+    constexpr size_t INVALID_SIZE = -1;
+    constexpr size_t DEFAULT_SIZE = 131072; // 512 * 256 byte
 
-        MemoryChunkInfo (int pool_type, size_t pool_index)
-            : poolType (pool_type), poolIndex (pool_index) {}
+
+    struct MemoryChunkPos
+    {
+        size_t blockIndex;
+        size_t chunkIndex;
     };
 
     struct MemoryChunk
     {
-        void* data;
-        size_t currentSize = 0;
-        size_t maxSize = 0;
-        size_t poolIndex = -1;
-        int poolType;
-        bool isUsed = false;
+        size_t startIndex;
+        size_t alignedStartIndex;
+        size_t size;
+        size_t usedSize;
+
+        void* blockData;
+
+        template <typename T>
+        inline T* GetFirstValue ()
+        {
+            return reinterpret_cast<T*>(static_cast<char*>(blockData) + alignedStartIndex);
+        }
+
+        template <typename T>
+        inline void WriteMemory (const T& value, size_t index, T* memory)
+        {
+            usedSize += sizeof(T);
+            if (usedSize > size)
+            {
+                LOGGER->Log(utils::IENIUM_ERROR, "Trying to write memory block out of bounds for chunk!\n" + std::to_string(usedSize) + "/" + std::to_string(size));
+                usedSize -= sizeof(T);
+                throw (std::exception ());
+                return;
+            }
+            memory[index] = value;
+
+        }
     };
 
-    class RenderMemoryManager
+    class MemoryBlock
     {
-        public:        
-        void DefineChunkSizes (size_t tiny_size, size_t small_size, size_t medium_size, size_t large_size);
-        void DefinePoolSizes (size_t tiny_size, size_t small_size, size_t medium_size, size_t large_size);
-        void InitializePools ();
+    friend class MemoryManager;
+    public:
+        
 
-        MemoryChunkInfo RequestMemoryChunk (size_t required_size);
-        MemoryChunkInfo RequestInitialMemoryChunk ();
+    private:
+        size_t size;
+        void* data;
+        std::vector<MemoryChunk> chunks;
 
-        MemoryChunk* GetChunk (const MemoryChunkInfo& memory_chunk_info);
+        size_t usedSize = 0;
+    };
 
-        void ReleaseChunk (const MemoryChunkInfo& memory_chunk);
+    struct MemoryBlockStats
+    {
+        size_t size;
+        size_t usedSize;
+    };
 
-        void ResetAllPools ();
+    struct MemoryManagerStats
+    {
+        size_t allocatedMemory;
+        MemoryBlockStats mainBlockStats;
+        std::vector<MemoryBlockStats> backupBlockStats;
+    };
 
-        void LogStats ();
-
-        void Shutdown ();
 
 
-        private:
-        struct MemoryPool
+    class MemoryManager
+    {
+        struct ExpandCommand
         {
-            int poolType;
-            std::vector<MemoryChunk> chunks;
-            size_t chunkSize;
-            std::vector<size_t> freeChunks;
-            std::mutex poolMutex;
+            bool active = false;
+            void* data;
+            size_t allocatedMemory = INVALID_SIZE;
         };
 
-        enum PoolType { TINY, SMALL, MEDIUM, LARGE, POOL_COUNT };
+    public:
+        void Initialize (size_t initial_size);
+        void Shutdown ();
+        static void CheckMemoryLeak ();
 
-        MemoryPool pools[POOL_COUNT];
+        void ExpandBlock ();
+        void FreeUnused ();
 
-        size_t chunkSizes[POOL_COUNT] = {
-            1024,    // 1KB
-            16384,   // 16KB  
-            262144,  // 256KB
-            2097152  // 2MB
-        };
+        MemoryManagerStats GetStats ();
 
-        size_t poolSizes[POOL_COUNT] = {
-            50,
-            100,
-            50,
-            20
-        };
 
-        void CreatePools ();
-        void AddChunks (MemoryPool* pool, size_t chunk_count);
-        void AllocateMemoryPools ();
-        void DeletePools ();
+        MemoryChunkPos RequestMemoryChunk (size_t required_size, size_t align);
+        MemoryChunk* GetMemoryChunk (const MemoryChunkPos& chunk_pos);
+        void ResetMemoryChunks ();
 
-        PoolType FindBestPoolType (size_t required_size) const;
-        MemoryChunk* AllocateFromPool (PoolType poolType);
+
+    private:
+        static size_t allocatedMemory;
+        MemoryBlock memoryBlock;
+        std::mutex expandCommandsMutex;
+        std::mutex allocationMutex;
+        ExpandCommand expandCommand;
+        std::vector<MemoryBlock> backupBlocks;
+
+        void AddBlock (size_t required_total_size);
+        
+        static void AllocateAsync (size_t required_size, MemoryManager* memory_manager);
     };
 }

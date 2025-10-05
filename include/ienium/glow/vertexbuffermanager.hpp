@@ -8,9 +8,9 @@
 
 #define MAX_VERTICES (size_t) MAX_QUADS * 4
 
-const size_t MAX_QUADS      = 16384;        // per Batch
-const size_t MAX_VERTiCES   = 4 * 16384;    // per Batch
-const size_t MAX_INDICES    = 6 * 16384;    // per Batch
+const size_t MAX_QUADS      = 100000;        // per Batch
+const size_t MAX_VERTiCES   = 4 * 100000;    // per Batch
+const size_t MAX_INDICES    = 6 * 100000;    // per Batch
 
 namespace ienium
 {
@@ -21,7 +21,7 @@ namespace ienium
 
         
         void FillSpriteBuffer (const std::vector<Vector2>& vertices, const std::vector<Vector2>& uvs);
-        void FillSpriteBuffer (glow::MemoryChunk* vbo, glow::MemoryChunk* ebo);
+        void FillSpriteBuffer (MemoryChunk* vbo, MemoryChunk* ebo);
         void DrawSpriteBuffer () const;
         void DrawSpriteBuffer (unsigned int sprite_count) const;
 
