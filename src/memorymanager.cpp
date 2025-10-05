@@ -32,39 +32,49 @@ namespace ienium::glow
         AllocateMemoryPools ();
     }
 
-    MemoryChunk* RenderMemoryManager::RequestMemoryChunk (size_t required_size)
+    MemoryChunkInfo RenderMemoryManager::RequestMemoryChunk (size_t required_size)
     {
         auto pool_type = FindBestPoolType (required_size);
         if (pool_type == POOL_COUNT)
         {
-            return nullptr;
+            //return nullptr;
+            pool_type = (PoolType) (POOL_COUNT -1);
             LOGGER->Log (utils::IENIUM_ERROR, "Required memory size exceed maximum chunk size.");
         }
             
 
-        return AllocateFromPool (pool_type);
+        auto chunk = AllocateFromPool (pool_type);
+        return MemoryChunkInfo(chunk->poolType, chunk->poolIndex);
     }
 
-    MemoryChunk* RenderMemoryManager::RequestInitialMemoryChunk ()
+    MemoryChunkInfo RenderMemoryManager::RequestInitialMemoryChunk ()
     {
         auto pool_type = PoolType::MEDIUM;
 
-        return AllocateFromPool (pool_type);
+        auto chunk = AllocateFromPool (pool_type);
+
+        return MemoryChunkInfo(chunk->poolType, chunk->poolIndex);
     }
 
-    void RenderMemoryManager::ReleaseChunk (MemoryChunk* memory_chunk)
+    MemoryChunk* RenderMemoryManager::GetChunk (const MemoryChunkInfo& memory_chunk_info)
     {
-         std::lock_guard<std::mutex> lock(pools[memory_chunk->poolType].poolMutex);
-        if (!memory_chunk || !memory_chunk->isUsed)
+        return &pools[memory_chunk_info.poolType].chunks[memory_chunk_info.poolIndex];
+    }
+
+    void RenderMemoryManager::ReleaseChunk (const MemoryChunkInfo& memory_chunk_info)
+    {
+        MemoryChunk& memory_chunk = pools[memory_chunk_info.poolType].chunks[memory_chunk_info.poolIndex];
+        std::lock_guard<std::mutex> lock(pools[memory_chunk_info.poolType].poolMutex);
+        if (!memory_chunk.isUsed)
         {
             LOGGER->Log (utils::IENIUM_WARNING, "Tried to release a nonexistant or already released memory chunk.");
             return;
         }
             
 
-        memory_chunk->currentSize = 0;
-        memory_chunk->isUsed = false;
-        pools[memory_chunk->poolType].freeChunks.push_back (memory_chunk->poolIndex);
+        memory_chunk.currentSize = 0;
+        memory_chunk.isUsed = false;
+        pools[memory_chunk.poolType].freeChunks.push_back (memory_chunk.poolIndex);
     }
 
     void RenderMemoryManager::ResetAllPools ()
@@ -101,13 +111,12 @@ namespace ienium::glow
                     used_pools [counter] ++;
                     used_chunks.push_back (&chunk);
                 }
-                
             }
-
             counter ++;
         }
 
-        std::string msg = "Memory chunks in use:\t" + std::to_string (used_pools[0]) + " | " + std::to_string (used_pools[1]) + " | " + std::to_string (used_pools[2]) + " | " + std::to_string (used_pools[3]) + " | ";
+        std::string msg = "Memory chunks allocated:\t" + std::to_string(pools[0].chunks.size()) + " | " + std::to_string(pools[1].chunks.size()) + " | " + std::to_string(pools[2].chunks.size()) + " | " + std::to_string(pools[3].chunks.size()) + "\n";
+        msg += "Memory chunks in use:\t\t" + std::to_string (used_pools[0]) + " | " + std::to_string (used_pools[1]) + " | " + std::to_string (used_pools[2]) + " | " + std::to_string (used_pools[3]);
         for (auto chunk : used_chunks)
         {
             msg.append ("\nMax Size:\t" + std::to_string(chunk->maxSize) + "\tCurrent Size:\t" + std::to_string(chunk->currentSize));
@@ -129,6 +138,7 @@ namespace ienium::glow
             auto& pool = pools[i];
             pool.chunkSize = chunkSizes[i];
             pool.chunks = std::vector<MemoryChunk> (poolSizes[i]);
+            pool.poolType = i;
             
             for (size_t j = 0; j < poolSizes[i]; ++j)
             {
@@ -138,6 +148,24 @@ namespace ienium::glow
                 pool.chunks[j].maxSize = chunkSizes[PoolType(i)];
                 pool.chunks[j].poolType = PoolType(i);
             }
+        }
+    }
+
+    void RenderMemoryManager::AddChunks (MemoryPool* pool, size_t chunk_count)
+    {
+        size_t current_index = pool->chunks.size ();
+        for (size_t i = 0; i < chunk_count; i++)
+        {
+            MemoryChunk chunk;
+            chunk.poolIndex = current_index;
+            chunk.maxSize = pool->chunkSize;
+            chunk.poolType = pool->poolType;
+            chunk.isUsed = false;
+            chunk.data = operator new (pool->chunkSize);
+            pool->chunks.push_back(chunk);
+            pool->freeChunks.push_back (current_index);
+
+            current_index++;
         }
     }
 
@@ -181,7 +209,7 @@ namespace ienium::glow
         }
     }
 
-    RenderMemoryManager::PoolType RenderMemoryManager::FindBestPoolType (size_t required_size)
+    RenderMemoryManager::PoolType RenderMemoryManager::FindBestPoolType (size_t required_size) const
     {
         int i = 0;
         for (i = 0; i < POOL_COUNT; ++i)
@@ -196,18 +224,32 @@ namespace ienium::glow
     MemoryChunk* RenderMemoryManager::AllocateFromPool (RenderMemoryManager::PoolType pool_type)
     {
         std::lock_guard<std::mutex> lock(pools[pool_type].poolMutex);
-        auto& pool = pools[pool_type];
-        if (pool.freeChunks.empty ())
+        const auto requested_pool_type = pool_type;
+        auto pool = &pools[pool_type];
+        while (pool->freeChunks.empty ())
         {
             // TODO: Increase pool size for this pool type for next frame. And use larger available pool for this frame
             // If no larger pool available: Create new chunk on the fly
             // Create on the fly right here, pool increasing at end of frame (count how many pools are missing over the frame)
-            LOGGER->Log (utils::IENIUM_ERROR, "No memory chunks available in requested pool.");
+            //LOGGER->Log (utils::IENIUM_WARNING, "No memory chunks available in requested pool. Trying larger pool if available");
+            if (pool_type < LARGE)
+            {
+                pool_type = (PoolType) (pool_type + 1);
+                pool = &pools[pool_type];
+                continue;
+            }
+            else {
+                LOGGER->Log (IENIUM_ERROR, "No larger pool available. Allocating new memory.");
+                AddChunks(&pools[requested_pool_type], 10);
+                pool_type = requested_pool_type;
+                pool = &pools[pool_type];
+                continue;
+            }
             return nullptr;
         }
 
-        auto selected_chunk = &pool.chunks[pool.freeChunks.back ()];
-        pool.freeChunks.pop_back ();
+        auto selected_chunk = &pool->chunks[pool->freeChunks.back ()];
+        pool->freeChunks.pop_back ();
         selected_chunk->isUsed = true;
         //selected_chunk->maxSize = required_size;
 

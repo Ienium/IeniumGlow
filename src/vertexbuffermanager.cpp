@@ -1,9 +1,11 @@
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include <GL/glew.h>
 
 #include "ienium/glow/vertexbuffermanager.hpp"
+#include "ienium/glow/core/internaldefinitions.hpp"
 #include "ienium/glow/memorymanager.hpp"
 #include "ienium/utils/logger/ieniumlogger.hpp"
 
@@ -25,11 +27,13 @@ namespace ienium
 
         // data order : [x,y,u,v]->[x,y,u,v]
         glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);                          // X,Y => stride = 8, offset = 0
-        glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof (float)));       // U,V => stride = 8, offset = 2
-        glVertexAttribPointer (2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof (float)));       // R,G,B,A => stride = 8, offset = 4
         glEnableVertexAttribArray (0);
+        glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof (float)));       // U,V => stride = 8, offset = 2
         glEnableVertexAttribArray (1);
+        glVertexAttribPointer (2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(4 * sizeof (float)));       // R,G,B,A => stride = 8, offset = 4
         glEnableVertexAttribArray (2);
+        
+        
 
         // Unbind to be safe
         glBindVertexArray(0);
@@ -99,10 +103,16 @@ namespace ienium
     void VertexBufferManager::FillSpriteBuffer (MemoryChunk* vbo, MemoryChunk* ebo)
     {
         glBindBuffer (GL_ARRAY_BUFFER, spriteVBOId);
+        std::cout << glewGetErrorString(glGetError()) << std::endl;
+        std::cout << vbo->currentSize << std::endl;
         glBufferSubData (GL_ARRAY_BUFFER, 0, vbo->currentSize, vbo->data);
+        std::cout << glewGetErrorString(glGetError()) << std::endl;
+        
 
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, spriteEBOId);
+        std::cout << glewGetErrorString(glGetError()) << std::endl;
         glBufferSubData (GL_ELEMENT_ARRAY_BUFFER, 0, ebo->currentSize, ebo->data);
+        std::cout << glewGetErrorString(glGetError()) << std::endl;
     }
 
     void VertexBufferManager::DrawSpriteBuffer () const

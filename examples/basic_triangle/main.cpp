@@ -2,9 +2,10 @@
 #include "ienium/glow/core/internaldefinitions.hpp"
 #include "ienium/utils/color/ieniumcolor.hpp"
 #include <chrono>
-#include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <filesystem>
+#include <print>
 #include <string>
 
 #define GLFW_INCLUDE_NONE
@@ -50,7 +51,7 @@ int main ()
         
 
     glfwMakeContextCurrent (window);
-    glfwSwapInterval(0);
+    //glfwSwapInterval(0);
     GLenum err = glewInit ();
     if (err != GLEW_OK)
     {
@@ -81,16 +82,26 @@ int main ()
         
         renderer.BeginFrame ();
 
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < 100000; i++)
         {
-            renderer.SetLayer(0);
-            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(0.5,0.5), 0);
-            renderer.SetLayer(1);
-            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(-0.5,-0.5), 0);
-            renderer.SetLayer(2);
-            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(-0.5,0.5), 0);
-            renderer.SetLayer(3);
-            renderer.DrawSprite(Vector2(0.5,0.5), Vector2(0.5,-0.5), 0);
+            if (i==11284)
+            {
+                std::println("A");
+            }
+            srand(i);
+            float x = rand () % 100 / 75.f - 0.75;
+            float y = rand () % 100 / 75.f - 0.75;
+            float w = rand () % 100 / 200.f;
+            float h = rand () % 100 / 200.f;
+
+            float r = rand () % 100 / 100.f;
+            float g = rand () % 100 / 100.f;
+            float b = rand () % 100 / 100.f;
+
+            int layer = 1;//(int) (rand () % 100 / 100.f * 4) ;
+
+            renderer.SetLayer(layer);
+            renderer.DrawSprite(Vector2(w,h), Vector2(x,y), 0, utils::Color(r,g,b));
         }
         
         //renderer.DrawSprite(Vector2(0.5,0.5), Vector2(-0.5,-0.5), 0);
@@ -101,9 +112,10 @@ int main ()
         glfwPollEvents ();
 
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(clock.now() - last_time).count();
-        LOGGER->Log(ienium::utils::IENIUM_DEBUG, "Frame time: " + std::to_string(diff) + "ms");
+        LOGGER->Log(ienium::utils::IENIUM_DEBUG, "Frame time: " + std::to_string(diff) + "us");
         last_time = clock.now ();
     }
+    renderer.Shutdown ();
 
     glfwDestroyWindow (window);
     glfwTerminate ();

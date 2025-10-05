@@ -6,6 +6,15 @@
 
 namespace ienium::glow
 {
+    struct MemoryChunkInfo
+    {
+        int poolType;
+        size_t poolIndex;
+
+        MemoryChunkInfo (int pool_type, size_t pool_index)
+            : poolType (pool_type), poolIndex (pool_index) {}
+    };
+
     struct MemoryChunk
     {
         void* data;
@@ -23,10 +32,12 @@ namespace ienium::glow
         void DefinePoolSizes (size_t tiny_size, size_t small_size, size_t medium_size, size_t large_size);
         void InitializePools ();
 
-        MemoryChunk* RequestMemoryChunk (size_t required_size);
-        MemoryChunk* RequestInitialMemoryChunk ();
+        MemoryChunkInfo RequestMemoryChunk (size_t required_size);
+        MemoryChunkInfo RequestInitialMemoryChunk ();
 
-        void ReleaseChunk (MemoryChunk* memory_chunk);
+        MemoryChunk* GetChunk (const MemoryChunkInfo& memory_chunk_info);
+
+        void ReleaseChunk (const MemoryChunkInfo& memory_chunk);
 
         void ResetAllPools ();
 
@@ -38,6 +49,7 @@ namespace ienium::glow
         private:
         struct MemoryPool
         {
+            int poolType;
             std::vector<MemoryChunk> chunks;
             size_t chunkSize;
             std::vector<size_t> freeChunks;
@@ -63,10 +75,11 @@ namespace ienium::glow
         };
 
         void CreatePools ();
+        void AddChunks (MemoryPool* pool, size_t chunk_count);
         void AllocateMemoryPools ();
         void DeletePools ();
 
-        PoolType FindBestPoolType (size_t required_size);
+        PoolType FindBestPoolType (size_t required_size) const;
         MemoryChunk* AllocateFromPool (PoolType poolType);
     };
 }

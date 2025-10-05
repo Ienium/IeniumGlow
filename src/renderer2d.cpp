@@ -21,7 +21,7 @@ namespace ienium::glow
         private:
         VertexBufferManager vertexBufferManager;
         RenderMemoryManager renderMemoryManager;
-        std::unique_ptr<BatchingSystem> batchingSystem;
+        BatchingSystem batchingSystem = BatchingSystem(&vertexBufferManager, &renderMemoryManager);
         int currentLayer = 0;
 
 
@@ -32,12 +32,12 @@ namespace ienium::glow
         {
             vertexBufferManager.Initialize ();
             renderMemoryManager.InitializePools ();
-            batchingSystem =  std::make_unique<BatchingSystem> (vertexBufferManager, renderMemoryManager);
+            //batchingSystem = BatchingSystem(&vertexBufferManager, &renderMemoryManager);
         }
 
         void Shutdown ()
         {
-
+            renderMemoryManager.Shutdown ();
         }
 
         void Clear (const ienium::utils::Color& color)
@@ -48,12 +48,12 @@ namespace ienium::glow
         void BeginFrame ()
         {
             renderMemoryManager.ResetAllPools ();
-            batchingSystem->BeginFrame (); 
+            batchingSystem.BeginFrame (); 
         }
 
         void EndFrame ()
         {
-            batchingSystem->EndFrame ();
+            batchingSystem.EndFrame ();
             //renderMemoryManager.LogStats ();
         }    
 
@@ -120,26 +120,13 @@ namespace ienium::glow
 
         void DrawSprite (const Vector2& position, ResourceId texture_id)
         {
-            //NOT_YET_IMPLEMENTED;
-            //LOGGER->Log (utils::IENIUM_WARNING, "Sprite functionality not yet implemented. Only redners single colord quad!");
-
-            std::vector<Vector2> mesh = {
-                Vector2 (-0.5,-0.5) + position,
-                Vector2 (0.5, -0.5) + position,
-                Vector2 (0.5, 0.5) + position,
-                Vector2 (-0.5, 0.5) + position,
-            };
-
-            renderMemoryManager.RequestMemoryChunk(1000);
-
-            vertexBufferManager.FillSpriteBuffer (mesh, mesh);
-            vertexBufferManager.DrawSpriteBuffer ();
+            NOT_YET_IMPLEMENTED;
         }
 
-        void DrawSprite (const Vector2& size, const Vector2& position, ResourceId texture_id, const utils::Color& tint, const Vector2& texture_scale, const Vector2& texture_offset, float angle) const
+        void DrawSprite (const Vector2& size, const Vector2& position, ResourceId texture_id, const utils::Color& tint, const Vector2& texture_scale, const Vector2& texture_offset, float angle)
         {
-            auto& batch = batchingSystem->RequestBatch(currentLayer, texture_id, RenderType::SPRITE);
-            batchingSystem->AddSpriteRenderCommand (batch, size, position, texture_id, tint, texture_scale, texture_offset, angle);
+            auto& batch = batchingSystem.RequestBatch(currentLayer, texture_id, RenderType::SPRITE);
+            batchingSystem.AddSpriteRenderCommand (batch, size, position, texture_id, tint, texture_scale, texture_offset, angle);
         }
     };
 
@@ -162,7 +149,7 @@ namespace ienium::glow
 
     void Renderer2D::Shutdown ()
     {
-        
+        impl->Shutdown ();
     }    
 
     void Renderer2D::Clear (const ienium::utils::Color& color)
