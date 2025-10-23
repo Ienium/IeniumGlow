@@ -1,0 +1,62 @@
+# .clang-format
+BasedOnStyle: LLVM
+Standard: Latest
+
+# Indentation and alignment
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 8
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignAfterOpenBracket: Align
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Braces and layout
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterNamespace: false
+  AfterClass: false
+  AfterFunction: false
+  AfterControlStatement: false
+  BeforeElse: false
+  BeforeCatch: false
+  BeforeWhile: false
+
+# Spacing
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpaceAfterCStyleCast: false
+
+# Line breaking
+ColumnLimit: 150
+AllowAllArgumentsOnNextLine: false
+BinPackArguments: true
+BinPackParameters: true
+AlwaysBreakTemplateDeclarations: Yes
+
+# Includes
+IncludeBlocks: Regroup
+SortIncludes: true
+IncludeCategories:
+  - Regex: '^<.+>$'
+    Priority: 1
+  - Regex: '^".+"$'
+    Priority: 2
+IncludeIsMainRegex: '([-_](test|unittest))?$'
+
+# Miscellaneous
+ReflowComments: true
+SortUsingDeclarations: true
+NamespaceIndentation: All
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+PointerAlignment: Left
+KeepEmptyLinesAtTheStartOfBlocks: false

@@ -4,22 +4,19 @@ endif()
 
 # Ensure debug symbols are generated
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(MSVC)
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /Od")
-        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG")
-        set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+    if(WIN32)
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
     else()
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined -g -O0")
     endif()
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-#set(CMAKE_TOOLCHAIN_FILE "F:/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 cmake_minimum_required (VERSION 3.12)
 project(IeniumGLow
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "2D Sprite Renderer"
     LANGUAGES CXX
 )
@@ -34,6 +31,11 @@ option(IENIUM_GLOW_BUILD_TEST "Build tests" OFF)
 
 find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
+
+if (NOT WIN32)
+    find_package(OpenGL REQUIRED)
+endif()
+
 add_subdirectory(src)
 
 if(IENIUM_GLOW_BUILD_EXAMPLES)

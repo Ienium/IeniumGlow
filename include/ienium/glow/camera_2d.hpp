@@ -6,12 +6,12 @@ namespace ienium::glow
 {
     class Camera2D
     {
-        public:
-        void SetPosition (const Vector2& position);
-        void SetAngle (float angle);
+      public:
+        void SetPosition(const Vector2& position);
+        void SetAngle(float angle);
         // void SetZoom (float zoom);
 
-        const Vector2& GetPosition () const;
-        float GetAngle () const;
+        [[nodiscard]] const Vector2& GetPosition() const;
+        [[nodiscard]] float          GetAngle() const;
     };
-}
+} // namespace ienium::glow
