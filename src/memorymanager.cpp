@@ -83,7 +83,7 @@ namespace ienium
 
             if (block_to_use == nullptr)
             {
-                // LOGGER->Log(IENIUM_WARNING, "Out of Memory, allocating new block!");
+                LOGGER->Log(IENIUM_WARNING, "Out of Memory, allocating new block!");
                 AddBlock(10 * required_size);
                 block_to_use = &backupBlocks.back();
             }
