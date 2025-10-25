@@ -1,44 +1,37 @@
 #pragma once
 
-#include "ienium/glow/core/Vector.hpp"
-#include "ienium/glow/renderer2d.hpp"
+#include "ienium/glow/core/publictypes.hpp"
+#include "memorymanager.hpp"
 
-#include <vector>
+const size_t MAX_QUADS    = 100000;        // per Batch
+const size_t MAX_VERTICES = 4 * MAX_QUADS; // per Batch
+const size_t MAX_INDICES  = 6 * MAX_QUADS; // per Batch
 
-#define MAX_VERTICES (size_t) MAX_QUADS * 4
-
-const size_t MAX_QUADS      = 16384;        // per Batch
-const size_t MAX_VERTiCES   = 4 * 16384;    // per Batch
-const size_t MAX_INDICES    = 6 * 16384;    // per Batch
-
-namespace ienium
+namespace ienium::glow
 {
     class VertexBufferManager
     {
-        public:
-        void Initialize ();
+      public:
+        void Initialize();
 
-        
-        void FillSpriteBuffer (const std::vector<Vector2>& vertices, const std::vector<Vector2>& uvs);
-        void DrawSpriteBuffer () const;
+        void FillSpriteBuffer(MemoryChunk* vbo, MemoryChunk* ebo) const;
+        void DrawSpriteBuffer() const;
+        void DrawSpriteBuffer(uint32_t sprite_count) const;
 
-        private:
+      private:
         ResourceId spriteVBOId;
         ResourceId spriteVAOId;
         ResourceId spriteEBOId;
-        unsigned int spriteQuadCount;
+        uint32_t   spriteQuadCount;
 
-        ResourceId lineVAOId;
-        ResourceId lineVBOId;
-        ResourceId lineEBOId;
+        // ResourceId lineVAOId;
+        // ResourceId lineVBOId;
+        // ResourceId lineEBOId;
         //... More VAOs as needed (one pre object type (sprite, line, triangles)
 
-        void CreateBuffers (ResourceId& vbo, ResourceId& ebo);
-        
+        void CreateBuffers(ResourceId& vbo, ResourceId& ebo);
     };
-}
-
-
+} // namespace ienium::glow
 
 /*
     VBM hat map von handle und vert2[]

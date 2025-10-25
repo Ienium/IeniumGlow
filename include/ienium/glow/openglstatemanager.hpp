@@ -6,25 +6,25 @@ namespace ienium::glow
 {
     class OpenGLStateManager
     {
-        public:
-        void SetShader (ResourceId shader_id);
-        void SetTexture (ResourceId texture_id);
+      public:
+        void SetShader(ResourceId shader_id);
+        void SetTexture(ResourceId texture_id);
 
-        void SetBlendMode (BlendFactor src, BlendFactor dst);
-        void DisableBlend ();
-        void SetDepthTestState (bool enabled);
+        void SetBlendMode(BlendFactor src, BlendFactor dst);
+        void DisableBlend();
+        void SetDepthTestState(bool enabled);
 
-        void SetBuffers (ResourceId vao_id, ResourceId vbo_id, ResourceId ebo_id);
+        void SetBuffers(ResourceId vao_id, ResourceId vbo_id, ResourceId ebo_id);
 
-        void SetViewport (int x, int y, int width, int height);
+        void SetViewport(int pos_x, int pos_y, int width, int height);
 
-        void Reset ();
+        void Reset();
 
-        private:
+      private:
         ResourceId currentShaderId = INVALID_RESOURCE;
 
-        ResourceId currentTextureId = INVALID_RESOURCE;
-        int currentTextureSlot;                             // Unused
+        ResourceId currentTextureId   = INVALID_RESOURCE;
+        int        currentTextureSlot = -1; // Unused
 
         BlendFactor currentSrcFactor = BLEND_ONE;
         BlendFactor currentDstFactor = BLEND_ONE;
@@ -34,10 +34,9 @@ namespace ienium::glow
         ResourceId currentEBOId = INVALID_RESOURCE;
 
         bool depthTestEnabled = false;
-        bool blendEnabled = false;
+        bool blendEnabled     = false;
 
         int currentViewportX = 0, currentViewportY = 0;
         int currentViewportWidth = 0, currentViewportHeight = 0;
-
     };
-}
+} // namespace ienium::glow

@@ -1,147 +1,149 @@
 #include "ienium/glow/core/Vector.hpp"
-#include "ienium/utils/logger/ieniumlogger.hpp"
+
 #include <cmath>
 #include <string>
 
+#include "ienium/utils/logger/ieniumlogger.hpp"
+
 namespace ienium
 {
-    void Vector2::Normalize ()
+    void Vector2::Normalize()
     {
-        double length = std::sqrt(x*x + y*y);
-        x = x/length;
-        y = y/length;
+        double length = std::sqrt((x * x) + (y * y));
+        x             = x / length;
+        y             = y / length;
     }
 
-    Vector2 Vector2::Normalized () const
+    Vector2 Vector2::Normalized() const
     {
-        double length = std::sqrt(x*x + y*y);
-        return Vector2 (x/length, y/length);
+        double length = std::sqrt((x * x) + (y * y));
+        return {x / length, y / length};
     }
 
-    double Vector2::Length () const
+    double Vector2::Length() const
     {
-        return std::sqrt(x*x + y*y);
+        return std::sqrt((x * x) + (y * y));
     }
 
-    double Vector2::SqrLength () const
+    double Vector2::SqrLength() const
     {
-        return x*x + y*y;
+        return (x * x) + (y * y);
     }
 
-    double Vector2::Dot (const Vector2& other) const
+    double Vector2::Dot(const Vector2& other) const
     {
-        return x * other.x + y * other.y;
+        return (x * other.x) + (y * other.y);
     }
 
-    void Vector2::Add (const Vector2& other)
+    void Vector2::Add(const Vector2& other)
     {
         x += other.x;
         y += other.y;
     }
-    void Vector2::Sub (const Vector2& other)
+    void Vector2::Sub(const Vector2& other)
     {
         x -= other.x;
         y -= other.y;
     }
 
-    void Vector2::Add (const double& scalar)
+    void Vector2::Add(const double& scalar)
     {
         x += scalar;
         y += scalar;
     }
-    void Vector2::Sub (const double& scalar)
+    void Vector2::Sub(const double& scalar)
     {
         x -= scalar;
         y -= scalar;
     }
-    void Vector2::Mul (const double& scalar)
+    void Vector2::Mul(const double& scalar)
     {
         x *= scalar;
         y *= scalar;
     }
-    void Vector2::Div (const double& scalar)
+    void Vector2::Div(const double& scalar)
     {
         if (scalar == 0)
-            utils::LoggerManager::GetInstance().GetLogger()->Log (utils::IENIUM_ERROR, "Tried to divide Vector2 by 0");
+            utils::LoggerManager::GetInstance().GetLogger()->Log(utils::IENIUM_ERROR, "Tried to divide Vector2 by 0");
         x /= scalar;
         y /= scalar;
     }
 
-    Vector2 Vector2::operator+ (const Vector2& other) const
+    Vector2 Vector2::operator+(const Vector2& other) const
     {
-        double _x = x + other.x;
-        double _y = y + other.y;
-        return Vector2 (_x, _y);
+        double ret_x = x + other.x;
+        double ret_y = y + other.y;
+        return {ret_x, ret_y};
     }
 
-    Vector2 Vector2::operator- (const Vector2& other) const
+    Vector2 Vector2::operator-(const Vector2& other) const
     {
-        double _x = x - other.x;
-        double _y = y - other.y;
-        return Vector2 (_x, _y);
+        double ret_x = x - other.x;
+        double ret_y = y - other.y;
+        return {ret_x, ret_y};
     }
 
-    double Vector2::operator* (const Vector2& other) const
+    double Vector2::operator*(const Vector2& other) const
     {
-        return this->Dot (other);
+        return this->Dot(other);
     }
 
-    Vector2 Vector2::operator+ (const double& scalar) const
+    Vector2 Vector2::operator+(const double& scalar) const
     {
-        double _x = x + scalar;
-        double _y = y + scalar;
-        return Vector2 (_x, _y);
+        double ret_x = x + scalar;
+        double ret_y = y + scalar;
+        return {ret_x, ret_y};
     }
 
-    Vector2 Vector2::operator- (const double& scalar) const
+    Vector2 Vector2::operator-(const double& scalar) const
     {
-        double _x = x - scalar;
-        double _y = y - scalar;
-        return Vector2 (_x, _y);
+        double ret_x = x - scalar;
+        double ret_y = y - scalar;
+        return {ret_x, ret_y};
     }
 
-    Vector2 Vector2::operator* (const double& scalar) const
+    Vector2 Vector2::operator*(const double& scalar) const
     {
-        double _x = x * scalar;
-        double _y = y * scalar;
-        return Vector2 (_x, _y);
+        double ret_x = x * scalar;
+        double ret_y = y * scalar;
+        return {ret_x, ret_y};
     }
 
-    Vector2 Vector2::operator/ (const double& scalar) const
+    Vector2 Vector2::operator/(const double& scalar) const
     {
-        double _x = x / scalar;
-        double _y = y / scalar;
-        return Vector2 (_x, _y);
+        double ret_x = x / scalar;
+        double ret_y = y / scalar;
+        return {ret_x, ret_y};
     }
 
-    Vector2 operator+ (double& scalar, const Vector2& v) 
+    Vector2 operator+(double& scalar, const Vector2& vec)
     {
-        double _x =  scalar + v.x;
-        double _y =  scalar + v.y;
-        return Vector2 (_x, _y);
+        double ret_x = scalar + vec.x;
+        double ret_y = scalar + vec.y;
+        return {ret_x, ret_y};
     }
 
-    Vector2 operator- (double& scalar, const Vector2& v)
+    Vector2 operator-(double& scalar, const Vector2& vec)
     {
-        double _x =  scalar - v.x;
-        double _y =  scalar - v.y;
-        return Vector2 (_x, _y);
+        double ret_x = scalar - vec.x;
+        double ret_y = scalar - vec.y;
+        return {ret_x, ret_y};
     }
 
-    Vector2 operator* (double& scalar, const Vector2& v)
+    Vector2 operator*(double& scalar, const Vector2& vec)
     {
-        double _x =  scalar * v.x;
-        double _y =  scalar * v.y;
-        return Vector2 (_x, _y);
+        double ret   = scalar * vec.x;
+        double ret_y = scalar * vec.y;
+        return {ret, ret_y};
     }
 
-    std::string Vector2::ToString () const
+    std::string Vector2::ToString() const
     {
-        return std::string ("( " + std::to_string(x) + " , " + std::to_string (y) + " )");
+        return std::string("( " + std::to_string(x) + " , " + std::to_string(y) + " )");
     }
 
-    std::ostream& operator<< (std::ostream& os, const Vector2& v)
+    std::ostream& operator<<(std::ostream& out_stream, const Vector2& vec)
     {
-        return os << v.ToString ();
+        return out_stream << vec.ToString();
     }
-}
+} // namespace ienium

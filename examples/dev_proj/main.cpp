@@ -1,15 +1,10 @@
-/*
-    Triangle rendering is not supported yet
-    This file is a placeholder until triangle rendering is supportd
-*/
-
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <string>
 
 #include "ienium/glow/core/Vector.hpp"
 #include "ienium/glow/core/internaldefinitions.hpp"
-#include "ienium/glow/core/publictypes.hpp"
 #include "ienium/utils/color/ieniumcolor.hpp"
 
 #define GLFW_INCLUDE_NONE
@@ -82,20 +77,25 @@ int main()
 
         renderer.BeginFrame();
 
-        /*  Rectangle rendering is currently not supported directly.
-            However the current implementation for Sprites does not render textures at the moment.
-            Thus to showcase the rendering, we can piggyback of the DrawSprite call
-        */
+        for (int i = 0; i < 100000; i++)
+        {
+            srand(i);
+            float pos_x  = (rand() % 100 / 75.F) - 0.75;
+            float pos_y  = (rand() % 100 / 75.F) - 0.75;
+            float width  = rand() % 100 / 200.F;
+            float height = rand() % 100 / 200.F;
 
-        Vector2    size(0.5, 0.5);                // Size of the Rectangle (currently in screen space (so percentage of the screen size))
-        Vector2    position(0, 0);                // Position of the rectangle (anchord at the rectengle center) (currently in screen space)
-        ResourceId texture_id = INVALID_RESOURCE; // Irrelevant for rectangle rendering
-        Color      color(0.6F, 0.3F, 1.0F);       // Color of the rectangle
-        Vector2    texture_scale(0, 0);           // Irrelevant for rectangle rendering
-        Vector2    texture_offset(0, 0);          // Rotation of the rectangle as angle in radians (Currently nor implemented)
-        float      angle = 0;
+            float red   = rand() % 100 / 100.F;
+            float green = rand() % 100 / 100.F;
+            float blue  = rand() % 100 / 100.F;
 
-        renderer.DrawSprite(size, position, texture_id, color, texture_scale, texture_offset, angle);
+            int layer = (int)(rand() % 100 / 100.F * 4);
+
+            // renderer.SetLayer(layer);
+            renderer.DrawSprite(Vector2(width, height), Vector2(pos_x, pos_y), 0, utils::Color(red, green, blue));
+        }
+
+        // renderer.DrawSprite(Vector2(0.5,0.5), Vector2(-0.5,-0.5), 0);
 
         renderer.EndFrame();
 
@@ -105,6 +105,7 @@ int main()
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - last_time).count();
         LOGGER->Log(ienium::utils::IENIUM_DEBUG, "Frame time: " + std::to_string(diff) + "us");
         last_time = std::chrono::system_clock::now();
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     renderer.Shutdown();
 

@@ -1,6 +1,4 @@
 #include <cassert>
-#include <cmath>
-#include <print>
 
 #include "GL/glew.h"
 #include "ienium/glow/core/publictypes.hpp"

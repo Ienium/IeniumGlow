@@ -1,6 +1,7 @@
 /*
-    Triangle rendering is not supported yet
-    This file is a placeholder until triangle rendering is supportd
+    Rectangle rendering is not supported yet.
+    However the current implementation for Sprites does not render textures at the moment.
+    Thus to showcase the rendering, we can piggyback of the DrawSprite call to render a rectangle.
 */
 
 #include <chrono>
@@ -8,7 +9,6 @@
 #include <string>
 
 #include "ienium/glow/core/Vector.hpp"
-#include "ienium/glow/core/internaldefinitions.hpp"
 #include "ienium/glow/core/publictypes.hpp"
 #include "ienium/utils/color/ieniumcolor.hpp"
 
@@ -32,6 +32,7 @@ int main()
 {
     LoggerManager::GetInstance().SetLogger<ConsoleLogger>();
     auto* logger = LoggerManager::GetInstance().GetLogger();
+
     if (!glfwInit())
     {
         logger->Log(IENIUM_ERROR, "Initialization of glfw failed!");
@@ -53,6 +54,7 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0);
     GLenum err = glewInit();
+
     if (err != GLEW_OK)
     {
         logger->Log(IENIUM_ERROR, "Initialization of glew failed!");
@@ -103,7 +105,7 @@ int main()
         glfwPollEvents();
 
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - last_time).count();
-        LOGGER->Log(ienium::utils::IENIUM_DEBUG, "Frame time: " + std::to_string(diff) + "us");
+        // LOGGER->Log(ienium::utils::IENIUM_DEBUG, "Frame time: " + std::to_string(diff) + "us");
         last_time = std::chrono::system_clock::now();
     }
     renderer.Shutdown();
